@@ -6,6 +6,7 @@ import ai.behavioralwell.app.BehavioralWellApplication
 import ai.behavioralwell.app.data.models.DashboardResponse
 import ai.behavioralwell.app.data.repositories.NetworkResult
 import ai.behavioralwell.app.data.repositories.TelemetryRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,7 +20,7 @@ sealed class DashboardUiState {
 
 class DashboardViewModel : ViewModel() {
 
-    private val repository = TelemetryRepository(BehavioralWellApplication.instance)
+    private val repository by lazy { TelemetryRepository(BehavioralWellApplication.instance) }
 
     private val _uiState = MutableStateFlow<DashboardUiState>(DashboardUiState.Loading)
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
@@ -30,7 +31,7 @@ class DashboardViewModel : ViewModel() {
     }
 
     fun loadDashboardData() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             _uiState.value = DashboardUiState.Loading
             when (val result = repository.getDashboardData()) {
                 is NetworkResult.Success -> {

@@ -17,11 +17,12 @@ object ApiConfig {
 
     var baseUrl: String
         get() {
-            return if (::prefs.isInitialized) {
+            val rawUrl = if (::prefs.isInitialized) {
                 prefs.getString(KEY_BASE_URL, BuildConfig.DEFAULT_API_BASE_URL) ?: BuildConfig.DEFAULT_API_BASE_URL
             } else {
                 BuildConfig.DEFAULT_API_BASE_URL
             }
+            return if (!rawUrl.endsWith("/")) "$rawUrl/" else rawUrl
         }
         set(value) {
             if (::prefs.isInitialized) {

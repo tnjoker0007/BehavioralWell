@@ -148,6 +148,7 @@ data class InterventionStartInput(
 )
 
 data class InterventionCompleteInput(
+    @SerializedName("session_id") val sessionId: Int? = null,
     @SerializedName("feedback_score") val feedbackScore: Int? = null,
     @SerializedName("result_metrics") val resultMetrics: Map<String, Any>? = null
 )

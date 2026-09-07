@@ -1,5 +1,7 @@
 package ai.behavioralwell.app.core.network
 
+import android.util.Log
+import ai.behavioralwell.app.BuildConfig
 import ai.behavioralwell.app.BehavioralWellApplication
 import ai.behavioralwell.app.core.config.ApiConfig
 import ai.behavioralwell.app.data.api.BehavioralWellApiService
@@ -12,8 +14,24 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
 
-    private val loggingInterceptor = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BODY
+    private val loggingInterceptor: HttpLoggingInterceptor by lazy {
+        HttpLoggingInterceptor { message ->
+            if (BuildConfig.DEBUG) {
+                // Sanitize sensitive tokens, credentials, and payloads from Logcat
+                val sanitized = message
+                    .replace(Regex("(?i)authorization:\\s*bearer\\s+[^\\s]+"), "Authorization: Bearer [REDACTED]")
+                    .replace(Regex("(?i)\"access_token\"\\s*:\\s*\"[^\"]+\""), "\"access_token\": \"[REDACTED]\"")
+                    .replace(Regex("(?i)\"refresh_token\"\\s*:\\s*\"[^\"]+\""), "\"refresh_token\": \"[REDACTED]\"")
+                    .replace(Regex("(?i)\"password\"\\s*:\\s*\"[^\"]+\""), "\"password\": \"[REDACTED]\"")
+                    .replace(Regex("(?i)\"note\"\\s*:\\s*\"[^\"]+\""), "\"note\": \"[REDACTED]\"")
+                Log.d("BehavioralWellApi", sanitized)
+            }
+        }.apply {
+            level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BASIC else HttpLoggingInterceptor.Level.NONE
+            redactHeader("Authorization")
+            redactHeader("Cookie")
+            redactHeader("Set-Cookie")
+        }
     }
 
     val okHttpClient: OkHttpClient by lazy {

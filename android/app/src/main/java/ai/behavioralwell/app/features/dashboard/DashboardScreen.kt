@@ -76,7 +76,7 @@ fun DashboardScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            when (uiState) {
+            when (val state = uiState) {
                 is DashboardUiState.Loading -> {
                     CircularProgressIndicator(
                         color = PrimaryTealLight,
@@ -92,7 +92,7 @@ fun DashboardScreen(
                         verticalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            text = (uiState as DashboardUiState.Error).message,
+                            text = state.message,
                             color = Stage4HighConcern,
                             style = MaterialTheme.typography.bodyLarge
                         )
@@ -106,9 +106,8 @@ fun DashboardScreen(
                     }
                 }
                 is DashboardUiState.Success -> {
-                    val dashboard = (uiState as DashboardUiState.Success).dashboard
                     DashboardContent(
-                        dashboard = dashboard,
+                        dashboard = state.dashboard,
                         onNavigateToInterventions = onNavigateToInterventions
                     )
                 }
@@ -123,15 +122,19 @@ fun DashboardContent(
     onNavigateToInterventions: () -> Unit
 ) {
     val risk = dashboard.currentRisk
-    val stageColor = when (risk.stage) {
-        0 -> Stage0Stable
-        1 -> Stage1EarlyDev
-        2 -> Stage2PersistentDev
-        3 -> Stage3ElevatedRisk
-        else -> Stage4HighConcern
+    val stageColor = remember(risk.stage) {
+        when (risk.stage) {
+            0 -> Stage0Stable
+            1 -> Stage1EarlyDev
+            2 -> Stage2PersistentDev
+            3 -> Stage3ElevatedRisk
+            else -> Stage4HighConcern
+        }
     }
 
-    val wellnessScore = (100.0f - risk.riskScore).coerceIn(0.0f, 100.0f).toInt()
+    val wellnessScore = remember(risk.riskScore) {
+        (100.0f - risk.riskScore).coerceIn(0.0f, 100.0f).toInt()
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -139,10 +142,10 @@ fun DashboardContent(
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        item { Spacer(modifier = Modifier.height(8.dp)) }
+        item(key = "spacer_top") { Spacer(modifier = Modifier.height(8.dp)) }
 
         // --- Behavioral Wellness Score Card ---
-        item {
+        item(key = "wellness_card") {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = SurfaceSlate),
@@ -200,7 +203,7 @@ fun DashboardContent(
         }
 
         // --- Baseline Progress Card ---
-        item {
+        item(key = "baseline_card") {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = SurfaceSlate),
@@ -251,7 +254,7 @@ fun DashboardContent(
         }
 
         // --- Modality Contributions ---
-        item {
+        item(key = "modality_card") {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = SurfaceSlate),
@@ -277,7 +280,7 @@ fun DashboardContent(
         }
 
         // --- Recommended Interventions Button ---
-        item {
+        item(key = "interventions_button") {
             Button(
                 onClick = onNavigateToInterventions,
                 modifier = Modifier
@@ -303,7 +306,7 @@ fun DashboardContent(
             }
         }
 
-        item { Spacer(modifier = Modifier.height(80.dp)) }
+        item(key = "spacer_bottom") { Spacer(modifier = Modifier.height(80.dp)) }
     }
 }
 

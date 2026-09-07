@@ -5,25 +5,25 @@ import androidx.work.*
 import ai.behavioralwell.app.core.database.AppDatabase
 import ai.behavioralwell.app.core.network.RetrofitClient
 import ai.behavioralwell.app.data.database.TelemetryEntity
-import ai.behavioralwell.app.data.models.DashboardResponse
-import ai.behavioralwell.app.data.models.RiskAssessmentResponse
-import ai.behavioralwell.app.data.models.TelemetryInput
+import ai.behavioralwell.app.data.models.*
 import ai.behavioralwell.app.data.sync.TelemetryBatchSyncWorker
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 
 class TelemetryRepository(private val context: Context) {
 
-    private val db = AppDatabase.getInstance(context)
-    private val telemetryDao = db.telemetryDao()
+    private val db by lazy { AppDatabase.getInstance(context) }
+    private val telemetryDao by lazy { db.telemetryDao() }
     private val api = RetrofitClient.apiService
 
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).apply {
         timeZone = TimeZone.getTimeZone("UTC")
     }
 
-    suspend fun enqueueTelemetry(input: TelemetryInput) {
+    suspend fun enqueueTelemetry(input: TelemetryInput) = withContext(Dispatchers.IO) {
         val nowStr = dateFormat.format(Date())
         val entity = TelemetryEntity(
             timestamp = input.timestamp ?: nowStr,
@@ -81,8 +81,8 @@ class TelemetryRepository(private val context: Context) {
         )
     }
 
-    suspend fun getDashboardData(): NetworkResult<DashboardResponse> {
-        return try {
+    suspend fun getDashboardData(): NetworkResult<DashboardResponse> = withContext(Dispatchers.IO) {
+        try {
             val response = api.getDashboard()
             if (response.isSuccessful && response.body() != null) {
                 NetworkResult.Success(response.body()!!)
@@ -94,13 +94,52 @@ class TelemetryRepository(private val context: Context) {
         }
     }
 
-    suspend fun getCurrentRisk(): NetworkResult<RiskAssessmentResponse> {
-        return try {
+    suspend fun getCurrentRisk(): NetworkResult<RiskAssessmentResponse> = withContext(Dispatchers.IO) {
+        try {
             val response = api.getCurrentRisk()
             if (response.isSuccessful && response.body() != null) {
                 NetworkResult.Success(response.body()!!)
             } else {
                 NetworkResult.Error("Failed to fetch risk score: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            NetworkResult.Error("Network error: ${e.localizedMessage ?: "Unknown error"}")
+        }
+    }
+
+    suspend fun startIntervention(activityType: String): NetworkResult<Map<String, Any>> = withContext(Dispatchers.IO) {
+        try {
+            val response = api.startIntervention(InterventionStartInput(activityType = activityType))
+            if (response.isSuccessful && response.body() != null) {
+                NetworkResult.Success(response.body()!!)
+            } else {
+                NetworkResult.Error("Failed to start intervention: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            NetworkResult.Error("Network error: ${e.localizedMessage ?: "Unknown error"}")
+        }
+    }
+
+    suspend fun completeIntervention(sessionId: Int?, feedbackScore: Int?, metrics: Map<String, Any>?): NetworkResult<Map<String, Any>> = withContext(Dispatchers.IO) {
+        try {
+            val response = api.completeIntervention(InterventionCompleteInput(sessionId = sessionId, feedbackScore = feedbackScore, resultMetrics = metrics))
+            if (response.isSuccessful && response.body() != null) {
+                NetworkResult.Success(response.body()!!)
+            } else {
+                NetworkResult.Error("Failed to complete intervention: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            NetworkResult.Error("Network error: ${e.localizedMessage ?: "Unknown error"}")
+        }
+    }
+
+    suspend fun submitSelfCheck(mood: String, stressLevel: Int, note: String?): NetworkResult<Map<String, Any>> = withContext(Dispatchers.IO) {
+        try {
+            val response = api.submitSelfCheck(SelfReportInput(mood = mood, stressLevel = stressLevel, note = note))
+            if (response.isSuccessful && response.body() != null) {
+                NetworkResult.Success(response.body()!!)
+            } else {
+                NetworkResult.Error("Failed to submit self-check: ${response.code()}")
             }
         } catch (e: Exception) {
             NetworkResult.Error("Network error: ${e.localizedMessage ?: "Unknown error"}")

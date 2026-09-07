@@ -5,6 +5,8 @@ import ai.behavioralwell.app.core.security.TokenStorage
 import ai.behavioralwell.app.data.models.TokenResponse
 import ai.behavioralwell.app.data.models.UserCreateRequest
 import ai.behavioralwell.app.data.models.UserLoginRequest
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 sealed class NetworkResult<out T> {
     data class Success<out T>(val data: T) : NetworkResult<T>()
@@ -15,8 +17,8 @@ class AuthRepository(private val tokenStorage: TokenStorage) {
 
     private val api = RetrofitClient.apiService
 
-    suspend fun login(email: String, password: String): NetworkResult<TokenResponse> {
-        return try {
+    suspend fun login(email: String, password: String): NetworkResult<TokenResponse> = withContext(Dispatchers.IO) {
+        try {
             val response = api.login(UserLoginRequest(email, password))
             if (response.isSuccessful && response.body() != null) {
                 val tokenResp = response.body()!!
@@ -36,8 +38,8 @@ class AuthRepository(private val tokenStorage: TokenStorage) {
         }
     }
 
-    suspend fun register(name: String, email: String, password: String): NetworkResult<TokenResponse> {
-        return try {
+    suspend fun register(name: String, email: String, password: String): NetworkResult<TokenResponse> = withContext(Dispatchers.IO) {
+        try {
             val response = api.register(UserCreateRequest(name, email, password))
             if (response.isSuccessful && response.body() != null) {
                 val tokenResp = response.body()!!
@@ -57,7 +59,7 @@ class AuthRepository(private val tokenStorage: TokenStorage) {
         }
     }
 
-    suspend fun logout() {
+    suspend fun logout() = withContext(Dispatchers.IO) {
         tokenStorage.clearTokens()
     }
 }

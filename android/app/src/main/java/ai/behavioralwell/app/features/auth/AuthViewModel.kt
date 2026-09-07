@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import ai.behavioralwell.app.BehavioralWellApplication
 import ai.behavioralwell.app.data.repositories.AuthRepository
 import ai.behavioralwell.app.data.repositories.NetworkResult
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,7 +20,7 @@ sealed class AuthUiState {
 
 class AuthViewModel : ViewModel() {
 
-    private val repository = AuthRepository(BehavioralWellApplication.instance.tokenStorage)
+    private val repository by lazy { AuthRepository(BehavioralWellApplication.instance.tokenStorage) }
 
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
@@ -30,7 +31,7 @@ class AuthViewModel : ViewModel() {
             return
         }
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             _uiState.value = AuthUiState.Loading
             when (val result = repository.login(email, password)) {
                 is NetworkResult.Success -> {
@@ -49,7 +50,7 @@ class AuthViewModel : ViewModel() {
             return
         }
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             _uiState.value = AuthUiState.Loading
             when (val result = repository.register(name, email, password)) {
                 is NetworkResult.Success -> {
