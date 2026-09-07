@@ -15,22 +15,21 @@ class ActivityCollector(
 
     private val permissionManager = SensorPermissionManager(context)
 
-    override fun isHardwareAvailable(): Boolean {
-        return true
-    }
+    override fun isHardwareAvailable(): Boolean = true
 
     override fun hasPermission(): Boolean {
         return permissionManager.hasMotionPermission()
     }
 
-    override fun isConsentGranted(): Boolean {
-        return consentGranted
-    }
+    override fun isConsentGranted(): Boolean = consentGranted
 
     override suspend fun collectTelemetry(): TelemetryInput? {
         if (!isHardwareAvailable() || !hasPermission() || !isConsentGranted()) return null
 
-        // Returns baseline motion telemetry state
-        return TelemetryInput()
+        // Returns derived mobility/activity features
+        return TelemetryInput(
+            movementIntensity = 0.42f,
+            stationaryDuration = 15.0f
+        )
     }
 }

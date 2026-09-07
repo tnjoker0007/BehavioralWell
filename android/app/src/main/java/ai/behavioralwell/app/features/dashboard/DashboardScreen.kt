@@ -253,6 +253,42 @@ fun DashboardContent(
             }
         }
 
+        // --- Telemetry Pipeline Status Card ---
+        item(key = "telemetry_pipeline_status") {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = SurfaceSlate),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "Telemetry Collection Engine",
+                            style = MaterialTheme.typography.titleLarge.copy(fontSize = 15.sp, color = TextPrimaryDark, fontWeight = FontWeight.Bold)
+                        )
+                        Text(
+                            text = "Privacy-Preserved Feature Extraction • Room Local Queue",
+                            style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondaryDark, fontSize = 12.sp)
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(Stage0Stable.copy(alpha = 0.2f))
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                    ) {
+                        Text("ACTIVE", style = MaterialTheme.typography.labelMedium.copy(color = Stage0Stable, fontWeight = FontWeight.Bold))
+                    }
+                }
+            }
+        }
+
         // --- Modality Contributions ---
         item(key = "modality_card") {
             Card(

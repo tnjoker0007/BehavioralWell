@@ -14,17 +14,35 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ai.behavioralwell.app.core.design.*
+import ai.behavioralwell.app.data.repositories.TelemetryRepository
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PrivacySettingsScreen(
     onNavigateBack: () -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val repository = remember { TelemetryRepository(context) }
+    val scope = rememberCoroutineScope()
+
     var keyboardConsent by remember { mutableStateOf(true) }
     var usageConsent by remember { mutableStateOf(true) }
     var motionConsent by remember { mutableStateOf(true) }
     var workConsent by remember { mutableStateOf(true) }
     var mobilityConsent by remember { mutableStateOf(true) }
+
+    fun updateConsentState(
+        kb: Boolean = keyboardConsent,
+        usg: Boolean = usageConsent,
+        mot: Boolean = motionConsent,
+        wrk: Boolean = workConsent,
+        mob: Boolean = mobilityConsent
+    ) {
+        scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            repository.updateConsent(kb, usg, mot, wrk, mob)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -76,7 +94,10 @@ fun PrivacySettingsScreen(
                     title = "Keyboard Dynamics Telemetry",
                     description = "Collects typing speed (WPM) and pause variance. Zero typed characters stored.",
                     checked = keyboardConsent,
-                    onCheckedChange = { keyboardConsent = it }
+                    onCheckedChange = {
+                        keyboardConsent = it
+                        updateConsentState(kb = it)
+                    }
                 )
             }
 
@@ -85,7 +106,10 @@ fun PrivacySettingsScreen(
                     title = "App & Screen Usage Telemetry",
                     description = "Collects screen-on hours, unlock count, and app category switching.",
                     checked = usageConsent,
-                    onCheckedChange = { usageConsent = it }
+                    onCheckedChange = {
+                        usageConsent = it
+                        updateConsentState(usg = it)
+                    }
                 )
             }
 
@@ -94,7 +118,10 @@ fun PrivacySettingsScreen(
                     title = "Motion & Activity Telemetry",
                     description = "Collects accelerometer movement intensity and rotation variance.",
                     checked = motionConsent,
-                    onCheckedChange = { motionConsent = it }
+                    onCheckedChange = {
+                        motionConsent = it
+                        updateConsentState(mot = it)
+                    }
                 )
             }
 
@@ -103,7 +130,10 @@ fun PrivacySettingsScreen(
                     title = "Work & Task Telemetry",
                     description = "Tracks task completion times and error rates from check-ins.",
                     checked = workConsent,
-                    onCheckedChange = { workConsent = it }
+                    onCheckedChange = {
+                        workConsent = it
+                        updateConsentState(wrk = it)
+                    }
                 )
             }
 
@@ -112,7 +142,10 @@ fun PrivacySettingsScreen(
                     title = "Location & Mobility Telemetry",
                     description = "Derives travel distance and speed variance locally without saving raw GPS logs.",
                     checked = mobilityConsent,
-                    onCheckedChange = { mobilityConsent = it }
+                    onCheckedChange = {
+                        mobilityConsent = it
+                        updateConsentState(mob = it)
+                    }
                 )
             }
         }

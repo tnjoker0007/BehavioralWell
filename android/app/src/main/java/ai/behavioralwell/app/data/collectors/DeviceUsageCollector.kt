@@ -46,21 +46,32 @@ class DeviceUsageCollector(
         ) ?: emptyList()
 
         var totalTimeForegroundMs = 0L
+        var nightTimeForegroundMs = 0L
         var appLaunches = 0
 
         for (usage in stats) {
             if (usage.totalTimeInForeground > 0) {
                 totalTimeForegroundMs += usage.totalTimeInForeground
                 appLaunches += 1
+
+                val lastUsedCal = Calendar.getInstance().apply {
+                    timeInMillis = usage.lastTimeUsed
+                }
+                val hourOfDay = lastUsedCal.get(Calendar.HOUR_OF_DAY)
+                if (hourOfDay >= 23 || hourOfDay < 6) {
+                    nightTimeForegroundMs += usage.totalTimeInForeground.coerceAtMost(1000L * 60 * 60 * 2)
+                }
             }
         }
 
         val screenTimeHours = totalTimeForegroundMs / (1000.0f * 60.0f * 60.0f)
+        val nightUsageHours = nightTimeForegroundMs / (1000.0f * 60.0f * 60.0f)
         val switchFrequency = if (screenTimeHours > 0) appLaunches / screenTimeHours else 0.0f
 
         return TelemetryInput(
             screenTime = screenTimeHours,
             unlockCount = appLaunches,
+            nightUsage = nightUsageHours,
             appSwitchFrequency = switchFrequency
         )
     }

@@ -23,6 +23,79 @@ class TelemetryRepository(private val context: Context) {
         timeZone = TimeZone.getTimeZone("UTC")
     }
 
+    private val consentDao by lazy { db.consentDao() }
+
+    val pendingTelemetryCount = telemetryDao.getTotalTelemetryCount()
+
+    suspend fun collectAndEnqueueAll() = withContext(Dispatchers.IO) {
+        val usageCollector = ai.behavioralwell.app.data.collectors.DeviceUsageCollector(context)
+        val motionCollector = ai.behavioralwell.app.data.collectors.MotionCollector(context)
+        val keyboardCollector = ai.behavioralwell.app.data.collectors.KeyboardMetadataCollector(context)
+        val mobilityCollector = ai.behavioralwell.app.data.collectors.MobilityCollector(context)
+        val activityCollector = ai.behavioralwell.app.data.collectors.ActivityCollector(context)
+
+        val usageInput = usageCollector.collectTelemetry()
+        val motionInput = motionCollector.collectTelemetry()
+        val keyboardInput = keyboardCollector.collectTelemetry()
+        val mobilityInput = mobilityCollector.collectTelemetry()
+        val activityInput = activityCollector.collectTelemetry()
+
+        val mergedInput = TelemetryInput(
+            screenTime = usageInput?.screenTime,
+            unlockCount = usageInput?.unlockCount,
+            nightUsage = usageInput?.nightUsage,
+            appSwitchFrequency = usageInput?.appSwitchFrequency,
+            movementIntensity = motionInput?.movementIntensity ?: activityInput?.movementIntensity,
+            accelerationVariance = motionInput?.accelerationVariance,
+            stationaryDuration = motionInput?.stationaryDuration ?: activityInput?.stationaryDuration,
+            typingSpeed = keyboardInput?.typingSpeed,
+            keyPressDuration = keyboardInput?.keyPressDuration,
+            pauseDuration = keyboardInput?.pauseDuration,
+            correctionRate = keyboardInput?.correctionRate,
+            speedVariance = mobilityInput?.speedVariance,
+            routeVariability = mobilityInput?.routeVariability
+        )
+
+        enqueueTelemetry(mergedInput)
+    }
+
+    suspend fun updateConsent(
+        keyboard: Boolean,
+        usage: Boolean,
+        motion: Boolean,
+        work: Boolean,
+        mobility: Boolean
+    ): NetworkResult<ConsentResponse> = withContext(Dispatchers.IO) {
+        val consentEntity = ai.behavioralwell.app.data.database.ConsentEntity(
+            userId = "current_user",
+            keyboardEnabled = keyboard,
+            usageEnabled = usage,
+            motionEnabled = motion,
+            workEnabled = work,
+            mobilityEnabled = mobility
+        )
+        consentDao.saveConsent(consentEntity)
+
+        try {
+            val response = api.updateConsent(
+                ConsentUpdateRequest(
+                    keyboardEnabled = keyboard,
+                    usageEnabled = usage,
+                    motionEnabled = motion,
+                    workEnabled = work,
+                    mobilityEnabled = mobility
+                )
+            )
+            if (response.isSuccessful && response.body() != null) {
+                NetworkResult.Success(response.body()!!)
+            } else {
+                NetworkResult.Error("Consent update failed: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            NetworkResult.Error("Network error: ${e.localizedMessage}")
+        }
+    }
+
     suspend fun enqueueTelemetry(input: TelemetryInput) = withContext(Dispatchers.IO) {
         val nowStr = dateFormat.format(Date())
         val entity = TelemetryEntity(
