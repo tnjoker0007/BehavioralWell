@@ -32,11 +32,10 @@ def ingest_batch_telemetry(batch_in: BatchTelemetryInput, user_id: str = "usr_de
     for item in batch_in.batch:
         # Check idempotency deduplication
         if item.idempotency_key:
-            existing = db.query(BehavioralTelemetry).filter(
-                BehavioralTelemetry.user_id == user_id,
-                BehavioralTelemetry.raw_features_json.contains({"idempotency_key": item.idempotency_key})
-            ).first()
-            if existing:
+            recent_telemetries = db.query(BehavioralTelemetry).filter(
+                BehavioralTelemetry.user_id == user_id
+            ).order_by(BehavioralTelemetry.id.desc()).limit(200).all()
+            if any(r.raw_features_json and isinstance(r.raw_features_json, dict) and r.raw_features_json.get("idempotency_key") == item.idempotency_key for r in recent_telemetries):
                 skipped_count += 1
                 continue
 
