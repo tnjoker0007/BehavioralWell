@@ -91,14 +91,16 @@ def process_telemetry_payload(user_id: str, telemetry_in: TelemetryInput, db: Se
 
     # 3. Update personal baseline
     BaselineEngine.recalculate_user_baseline(db, user_id)
+    samples_count = db.query(BehavioralTelemetry).filter(BehavioralTelemetry.user_id == user_id).count()
+    baseline_status, _ = BaselineEngine.get_baseline_status_and_confidence(samples_count)
 
     # 4. Compute Z-scores relative to personal baseline
     z_scores = BaselineEngine.compute_feature_z_scores(db, user_id, sanitized_features)
 
     # 5. Evaluate temporal persistence (3-7 day trend)
-    persistence_days, trend = TemporalEngine.evaluate_persistence(db, user_id, z_scores)
+    persistence_days, trend, slope, rolling_3d, rolling_7d = TemporalEngine.evaluate_persistence(db, user_id, z_scores)
 
-    # 6. Evaluate Risk Score & Stage using Hybrid ML + Fallback Engine
+    # 6. Evaluate Risk Score & Stage using Hybrid ML Engine
     consent_flags = {
         "keyboard_enabled": consent.keyboard_enabled,
         "usage_enabled": consent.usage_enabled,
@@ -107,11 +109,11 @@ def process_telemetry_payload(user_id: str, telemetry_in: TelemetryInput, db: Se
         "mobility_enabled": consent.mobility_enabled
     }
     risk_score, stage, stage_label, confidence, modality_scores = MLRiskEngine.evaluate_risk(
-        z_scores, persistence_days, consent_flags
+        z_scores, persistence_days, consent_flags, baseline_status, samples_count
     )
 
     # 7. Generate explainability attribution
-    top_contributors = ExplainabilityEngine.generate_explanations(z_scores)
+    top_contributors = ExplainabilityEngine.generate_explanations(z_scores, sanitized_features)
     contributors_dict = [c.dict() for c in top_contributors]
 
     # 8. Save Risk Assessment Record

@@ -1,11 +1,11 @@
 from typing import Dict, List, Any
 from app.schemas.dto import ContributorFactor
 
-INTERVENTION_LIBRARY = {
+INTERVENTION_LIBRARY: Dict[str, Dict[str, Any]] = {
     "breathing": {
         "id": "breathing",
         "title": "2-Minute Breathing Reset",
-        "description": "Guided 4-7-8 rhythmic breathing technique to lower physiological tension.",
+        "description": "Guided 4-7-8 rhythmic breathing exercise to lower physiological tension and restore calm.",
         "duration": "2 mins",
         "category": "Stress & Tension",
         "icon": "wind"
@@ -28,7 +28,7 @@ INTERVENTION_LIBRARY = {
     },
     "detox": {
         "id": "detox",
-        "title": "Digital Detox Break",
+        "title": "Digital Detox Pause",
         "description": "Timed phone pause exercise to encourage screen-free restorative rest.",
         "duration": "10 mins",
         "category": "Digital Balance",
@@ -41,6 +41,22 @@ INTERVENTION_LIBRARY = {
         "duration": "5 mins",
         "category": "Routine & Wellness",
         "icon": "check-circle"
+    },
+    "reflection": {
+        "id": "reflection",
+        "title": "Sleep & Routine Reflection",
+        "description": "Brief non-judgmental prompt to reflect on current sleep schedule and daily rhythm.",
+        "duration": "4 mins",
+        "category": "Routine & Rest",
+        "icon": "moon"
+    },
+    "support_contact": {
+        "id": "support_contact",
+        "title": "Reach Out to Trusted Support",
+        "description": "Encouraging prompt to connect with a trusted friend, colleague, mentor, or professional.",
+        "duration": "Flexible",
+        "category": "Social & Support Connection",
+        "icon": "users"
     }
 }
 
@@ -48,26 +64,40 @@ class InterventionEngine:
     @staticmethod
     def recommend_interventions(contributors: List[ContributorFactor], stage: int) -> List[Dict[str, Any]]:
         """
-        Recommends tailored interactive activities based on detected behavioral deviations and stage.
+        Recommends tailored non-diagnostic supportive interventions based on behavioral stage and feature contributions.
         """
         recommended_ids = set()
 
         if stage == 0:
             recommended_ids.add("micro_goal")
             recommended_ids.add("breathing")
-        elif stage >= 1:
-            for c in contributors:
-                if c.feature in ["night_usage", "screen_time", "unlock_count"]:
-                    recommended_ids.add("detox")
-                    recommended_ids.add("breathing")
-                elif c.feature in ["task_accuracy", "task_error_rate", "typing_speed"]:
-                    recommended_ids.add("focus")
-                    recommended_ids.add("reaction")
-                elif c.feature in ["acceleration_variance", "movement_intensity", "correction_rate"]:
-                    recommended_ids.add("breathing")
-                    recommended_ids.add("micro_goal")
+        elif stage == 1:
+            recommended_ids.add("breathing")
+            recommended_ids.add("micro_goal")
+            recommended_ids.add("reaction")
+        elif stage == 2:
+            recommended_ids.add("focus")
+            recommended_ids.add("detox")
+            recommended_ids.add("reflection")
+        elif stage == 3:
+            recommended_ids.add("breathing")
+            recommended_ids.add("detox")
+            recommended_ids.add("support_contact")
+        else: # Stage 4
+            recommended_ids.add("support_contact")
+            recommended_ids.add("reflection")
+            recommended_ids.add("breathing")
 
-        if not recommended_ids:
-            recommended_ids = {"breathing", "focus"}
+        # Add feature-specific recommendations
+        for c in contributors:
+            if c.feature in ["night_usage", "screen_time", "unlock_count"]:
+                recommended_ids.add("detox")
+                recommended_ids.add("reflection")
+            elif c.feature in ["task_accuracy", "task_error_rate", "typing_speed"]:
+                recommended_ids.add("focus")
+                recommended_ids.add("reaction")
+            elif c.feature in ["acceleration_variance", "movement_intensity", "correction_rate"]:
+                recommended_ids.add("breathing")
+                recommended_ids.add("micro_goal")
 
         return [INTERVENTION_LIBRARY[iid] for iid in recommended_ids if iid in INTERVENTION_LIBRARY]
