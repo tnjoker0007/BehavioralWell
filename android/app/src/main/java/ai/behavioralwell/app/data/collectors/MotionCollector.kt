@@ -5,9 +5,13 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.os.Handler
+import android.os.HandlerThread
 import ai.behavioralwell.app.core.sensors.SensorCollector
 import ai.behavioralwell.app.core.sensors.SensorType
 import ai.behavioralwell.app.data.models.TelemetryInput
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -25,21 +29,29 @@ class MotionCollector(
     private val accelerationBuffer = mutableListOf<Float>()
     private var stationarySecondsCount = 0
 
+    private val backgroundThread = HandlerThread("MotionSensorThread").apply { start() }
+    private val backgroundHandler = Handler(backgroundThread.looper)
+
     init {
         registerListeners()
     }
 
     private fun registerListeners() {
         accelerometer?.let {
-            sensorManager?.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)
+            sensorManager?.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL, backgroundHandler)
         }
         gyroscope?.let {
-            sensorManager?.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)
+            sensorManager?.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL, backgroundHandler)
         }
     }
 
     fun unregisterListeners() {
         sensorManager?.unregisterListener(this)
+        try {
+            backgroundThread.quitSafely()
+        } catch (e: Exception) {
+            // Ignored
+        }
     }
 
     override fun isHardwareAvailable(): Boolean {
@@ -47,7 +59,7 @@ class MotionCollector(
     }
 
     override fun hasPermission(): Boolean {
-        return true // Standard sensors do not require runtime permissions on Android
+        return true
     }
 
     override fun isConsentGranted(): Boolean {
@@ -78,8 +90,8 @@ class MotionCollector(
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
 
-    override suspend fun collectTelemetry(): TelemetryInput? {
-        if (!isHardwareAvailable() || !hasPermission() || !isConsentGranted()) return null
+    override suspend fun collectTelemetry(): TelemetryInput? = withContext(Dispatchers.IO) {
+        if (!isHardwareAvailable() || !hasPermission() || !isConsentGranted()) return@withContext null
 
         val (intensity, variance) = synchronized(accelerationBuffer) {
             if (accelerationBuffer.isEmpty()) return@synchronized Pair(0.0f, 0.0f)
@@ -93,7 +105,7 @@ class MotionCollector(
 
         val stationaryMins = (stationarySecondsCount / 60.0f)
 
-        return TelemetryInput(
+        TelemetryInput(
             movementIntensity = intensity,
             accelerationVariance = variance,
             stationaryDuration = stationaryMins

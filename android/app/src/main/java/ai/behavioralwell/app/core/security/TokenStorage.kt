@@ -12,6 +12,9 @@ private val Context.dataStore by preferencesDataStore(name = "behavioral_well_au
 
 class TokenStorage(private val context: Context) {
 
+    @Volatile
+    private var cachedAccessToken: String? = null
+
     companion object {
         private val ACCESS_TOKEN_KEY = stringPreferencesKey("access_token")
         private val REFRESH_TOKEN_KEY = stringPreferencesKey("refresh_token")
@@ -21,7 +24,9 @@ class TokenStorage(private val context: Context) {
     }
 
     val accessTokenFlow: Flow<String?> = context.dataStore.data.map { prefs ->
-        prefs[ACCESS_TOKEN_KEY]
+        val token = prefs[ACCESS_TOKEN_KEY]
+        cachedAccessToken = token
+        token
     }
 
     val refreshTokenFlow: Flow<String?> = context.dataStore.data.map { prefs ->
@@ -32,13 +37,19 @@ class TokenStorage(private val context: Context) {
         prefs[USER_ID_KEY]
     }
 
-    suspend fun getAccessToken(): String? = accessTokenFlow.first()
+    suspend fun getAccessToken(): String? {
+        cachedAccessToken?.let { return it }
+        val token = accessTokenFlow.first()
+        cachedAccessToken = token
+        return token
+    }
 
     suspend fun getRefreshToken(): String? = refreshTokenFlow.first()
 
     suspend fun getUserId(): String? = userIdFlow.first()
 
     suspend fun saveTokens(accessToken: String, refreshToken: String, userId: String, email: String, name: String) {
+        cachedAccessToken = accessToken
         context.dataStore.edit { prefs ->
             prefs[ACCESS_TOKEN_KEY] = accessToken
             prefs[REFRESH_TOKEN_KEY] = refreshToken
@@ -49,6 +60,7 @@ class TokenStorage(private val context: Context) {
     }
 
     suspend fun clearTokens() {
+        cachedAccessToken = null
         context.dataStore.edit { prefs ->
             prefs.remove(ACCESS_TOKEN_KEY)
             prefs.remove(REFRESH_TOKEN_KEY)

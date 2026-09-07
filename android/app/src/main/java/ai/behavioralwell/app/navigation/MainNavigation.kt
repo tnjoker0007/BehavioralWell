@@ -1,14 +1,14 @@
 package ai.behavioralwell.app.navigation
 
+import android.util.Log
 import androidx.compose.runtime.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import ai.behavioralwell.app.BuildConfig
 import ai.behavioralwell.app.BehavioralWellApplication
-import ai.behavioralwell.app.data.models.InterventionStartInput
-import ai.behavioralwell.app.data.models.SelfReportInput
-import ai.behavioralwell.app.core.network.RetrofitClient
+import ai.behavioralwell.app.data.repositories.TelemetryRepository
 import ai.behavioralwell.app.features.auth.AuthViewModel
 import ai.behavioralwell.app.features.auth.LoginScreen
 import ai.behavioralwell.app.features.auth.RegisterScreen
@@ -21,6 +21,7 @@ import ai.behavioralwell.app.features.privacy.PrivacySettingsScreen
 import ai.behavioralwell.app.features.profile.ProfileSettingsScreen
 import ai.behavioralwell.app.features.selfcheck.SelfCheckInDialog
 import ai.behavioralwell.app.features.sensors.SensorStatusDiagnosticsScreen
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 object Destinations {
@@ -37,20 +38,33 @@ object Destinations {
 
 @Composable
 fun MainNavigation() {
+    val navStartTime = System.currentTimeMillis()
+    if (BuildConfig.DEBUG) {
+        Log.d("PerfTrace", "[MainNavigation] Component composition started at $navStartTime")
+    }
+
     val navController = rememberNavController()
     val authViewModel: AuthViewModel = viewModel()
     val dashboardViewModel: DashboardViewModel = viewModel()
     val scope = rememberCoroutineScope()
+    val context = BehavioralWellApplication.instance
+
+    val telemetryRepository = remember { TelemetryRepository(context) }
+    val tokenStorage = remember { BehavioralWellApplication.instance.tokenStorage }
 
     var showSelfCheckDialog by remember { mutableStateOf(false) }
-
-    val tokenStorage = BehavioralWellApplication.instance.tokenStorage
     val accessToken by tokenStorage.accessTokenFlow.collectAsState(initial = null)
 
-    val startDestination = if (!accessToken.isNull_or_empty()) {
-        Destinations.DASHBOARD
-    } else {
-        Destinations.LOGIN
+    val startDestination = remember(accessToken) {
+        if (!accessToken.isNull_or_empty()) {
+            Destinations.DASHBOARD
+        } else {
+            Destinations.LOGIN
+        }
+    }
+
+    if (BuildConfig.DEBUG) {
+        Log.d("PerfTrace", "[MainNavigation] Computed startDestination: $startDestination in ${System.currentTimeMillis() - navStartTime}ms")
     }
 
     NavHost(navController = navController, startDestination = startDestination) {
@@ -99,15 +113,13 @@ fun MainNavigation() {
                     onDismiss = { showSelfCheckDialog = false },
                     onSubmit = { mood, stressLevel, note ->
                         showSelfCheckDialog = false
-                        scope.launch {
-                            try {
-                                RetrofitClient.apiService.submitSelfCheck(
-                                    SelfReportInput(mood = mood, stressLevel = stressLevel, note = note)
-                                )
-                                dashboardViewModel.loadDashboardData()
-                            } catch (e: Exception) {
-                                e.printStackTrace()
+                        scope.launch(Dispatchers.IO) {
+                            val startMs = System.currentTimeMillis()
+                            telemetryRepository.submitSelfCheck(mood, stressLevel, note)
+                            if (BuildConfig.DEBUG) {
+                                Log.d("PerfTrace", "[SelfCheck] Submitted self-check in ${System.currentTimeMillis() - startMs}ms")
                             }
+                            dashboardViewModel.loadDashboardData()
                         }
                     }
                 )
@@ -130,25 +142,21 @@ fun MainNavigation() {
             InterventionsScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onStartBreathing = {
-                    scope.launch {
-                        try {
-                            RetrofitClient.apiService.startIntervention(
-                                InterventionStartInput(activityType = "Breathing Reset")
-                            )
-                        } catch (e: Exception) {
-                            e.printStackTrace()
+                    scope.launch(Dispatchers.IO) {
+                        val startMs = System.currentTimeMillis()
+                        telemetryRepository.startIntervention("Breathing Reset")
+                        if (BuildConfig.DEBUG) {
+                            Log.d("PerfTrace", "[Intervention] Started Breathing Reset in ${System.currentTimeMillis() - startMs}ms")
                         }
                     }
                     navController.navigate(Destinations.BREATHING_RESET)
                 },
                 onStartReactionChallenge = {
-                    scope.launch {
-                        try {
-                            RetrofitClient.apiService.startIntervention(
-                                InterventionStartInput(activityType = "Reaction Challenge")
-                            )
-                        } catch (e: Exception) {
-                            e.printStackTrace()
+                    scope.launch(Dispatchers.IO) {
+                        val startMs = System.currentTimeMillis()
+                        telemetryRepository.startIntervention("Reaction Challenge")
+                        if (BuildConfig.DEBUG) {
+                            Log.d("PerfTrace", "[Intervention] Started Reaction Challenge in ${System.currentTimeMillis() - startMs}ms")
                         }
                     }
                     navController.navigate(Destinations.REACTION_CHALLENGE)
@@ -158,14 +166,24 @@ fun MainNavigation() {
 
         composable(Destinations.BREATHING_RESET) {
             BreathingResetScreen(
-                onComplete = { navController.popBackStack() },
+                onComplete = {
+                    scope.launch(Dispatchers.IO) {
+                        telemetryRepository.completeIntervention(sessionId = null, feedbackScore = 5, metrics = mapOf("heart_rate_bpm" to 68))
+                    }
+                    navController.popBackStack()
+                },
                 onClose = { navController.popBackStack() }
             )
         }
 
         composable(Destinations.REACTION_CHALLENGE) {
             ReactionChallengeScreen(
-                onComplete = { _ -> navController.popBackStack() },
+                onComplete = { reactionTimeMs ->
+                    scope.launch(Dispatchers.IO) {
+                        telemetryRepository.completeIntervention(sessionId = null, feedbackScore = 5, metrics = mapOf("reaction_time_ms" to reactionTimeMs))
+                    }
+                    navController.popBackStack()
+                },
                 onClose = { navController.popBackStack() }
             )
         }
@@ -174,10 +192,12 @@ fun MainNavigation() {
             ProfileSettingsScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onLogout = {
-                    scope.launch {
+                    scope.launch(Dispatchers.IO) {
                         tokenStorage.clearTokens()
-                        navController.navigate(Destinations.LOGIN) {
-                            popUpTo(0) { inclusive = true }
+                        launch(Dispatchers.Main) {
+                            navController.navigate(Destinations.LOGIN) {
+                                popUpTo(0) { inclusive = true }
+                            }
                         }
                     }
                 }
