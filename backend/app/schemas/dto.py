@@ -150,10 +150,14 @@ class SelfReportResponse(BaseModel):
     note: Optional[str]
     timestamp: datetime
 
+    class Config:
+        from_attributes = True
+
 class InterventionStartInput(BaseModel):
     activity_type: str
 
 class InterventionCompleteInput(BaseModel):
+    session_id: Optional[int] = None
     feedback_score: Optional[int] = None
     result_metrics: Optional[Dict[str, Any]] = None
 

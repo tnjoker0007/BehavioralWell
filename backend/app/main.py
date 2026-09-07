@@ -44,6 +44,7 @@ for prefix in [settings.API_V1_STR, "/api"]:
     app.include_router(telemetry_routes.router, prefix=prefix)
     app.include_router(risk_routes.router, prefix=prefix)
     app.include_router(intervention_routes.router, prefix=prefix)
+    app.include_router(intervention_routes.self_check_router, prefix=prefix)
     app.include_router(consultant_routes.router, prefix=prefix)
     app.include_router(analytics_routes.router, prefix=prefix)
     app.include_router(simulator_routes.router, prefix=prefix)
