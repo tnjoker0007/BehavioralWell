@@ -56,7 +56,16 @@ class TelemetryRepository(private val context: Context) {
             routeVariability = mobilityInput?.routeVariability
         )
 
-        enqueueTelemetry(mergedInput)
+        if (hasTelemetryContent(mergedInput)) {
+            enqueueTelemetry(mergedInput)
+        }
+    }
+
+    private fun hasTelemetryContent(input: TelemetryInput): Boolean {
+        return input.screenTime != null || input.unlockCount != null ||
+                input.movementIntensity != null || input.accelerationVariance != null ||
+                input.typingSpeed != null || input.taskAccuracy != null ||
+                input.speedVariance != null
     }
 
     suspend fun updateConsent(

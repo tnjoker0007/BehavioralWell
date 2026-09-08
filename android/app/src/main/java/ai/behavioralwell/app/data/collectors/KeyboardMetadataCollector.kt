@@ -37,12 +37,7 @@ class KeyboardMetadataCollector(
         if (!isConsentGranted()) return null
 
         if (totalKeyPresses == 0) {
-            return TelemetryInput(
-                typingSpeed = 45.0f,
-                keyPressDuration = 120.0f,
-                pauseDuration = 0.25f,
-                correctionRate = 0.05f
-            )
+            return null
         }
 
         val avgDwellMs = totalDwellTimeMs.toFloat() / totalKeyPresses

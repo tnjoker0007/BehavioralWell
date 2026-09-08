@@ -25,11 +25,6 @@ class ActivityCollector(
 
     override suspend fun collectTelemetry(): TelemetryInput? {
         if (!isHardwareAvailable() || !hasPermission() || !isConsentGranted()) return null
-
-        // Returns derived mobility/activity features
-        return TelemetryInput(
-            movementIntensity = 0.42f,
-            stationaryDuration = 15.0f
-        )
+        return null
     }
 }

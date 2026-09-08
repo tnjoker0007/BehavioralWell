@@ -16,11 +16,17 @@ class MobilityCollector(
     override fun hasPermission(): Boolean = true
     override fun isConsentGranted(): Boolean = consentGranted
 
-    private var speedVarianceVal: Float = 0.15f
-    private var routeVariabilityVal: Float = 0.22f
+    private var speedVarianceVal: Float? = null
+    private var routeVariabilityVal: Float? = null
+
+    fun recordMobility(speedVar: Float, routeVar: Float) {
+        if (!consentGranted) return
+        speedVarianceVal = speedVar
+        routeVariabilityVal = routeVar
+    }
 
     override suspend fun collectTelemetry(): TelemetryInput? {
-        if (!isConsentGranted()) return null
+        if (!isConsentGranted() || speedVarianceVal == null) return null
 
         return TelemetryInput(
             speedVariance = speedVarianceVal,
