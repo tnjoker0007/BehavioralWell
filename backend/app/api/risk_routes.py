@@ -6,11 +6,13 @@ from app.database import get_db
 from app.schemas.dto import RiskAssessmentResponse, RiskHistoryResponse
 from app.models.domain import RiskAssessment
 
+from app.api.auth_routes import get_current_user_id
+
 router = APIRouter(prefix="/risk", tags=["Risk Staging & Engine"])
 
 @router.get("/current", response_model=RiskAssessmentResponse)
 @router.get("/{user_id}/latest", response_model=RiskAssessmentResponse)
-def get_current_risk(user_id: str = "usr_demo12345", db: Session = Depends(get_db)):
+def get_current_risk(user_id: str = Depends(get_current_user_id), db: Session = Depends(get_db)):
     assessment = db.query(RiskAssessment).filter(
         RiskAssessment.user_id == user_id
     ).order_by(RiskAssessment.timestamp.desc()).first()
@@ -41,7 +43,8 @@ def get_current_risk(user_id: str = "usr_demo12345", db: Session = Depends(get_d
     )
 
 @router.get("/history", response_model=RiskHistoryResponse)
-def get_risk_history(user_id: str = "usr_demo12345", limit: int = 30, db: Session = Depends(get_db)):
+def get_risk_history(user_id: str = Depends(get_current_user_id), limit: int = 30, db: Session = Depends(get_db)):
+
     records = db.query(RiskAssessment).filter(
         RiskAssessment.user_id == user_id
     ).order_by(RiskAssessment.timestamp.desc()).limit(limit).all()

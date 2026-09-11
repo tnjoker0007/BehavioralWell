@@ -62,24 +62,26 @@ def refresh_token(req: TokenRefreshRequest, db: Session = Depends(get_db)):
         user=user_resp
     )
 
+def get_current_user_id(authorization: str = Header(None), db: Session = Depends(get_db)) -> str:
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.split(" ")[1]
+        payload = AuthService.decode_token(token)
+        if payload and payload.get("type") == "access" and payload.get("sub"):
+            user = db.query(User).filter(User.id == payload.get("sub")).first()
+            if user:
+                return user.id
+
+    # Fallback to single demo user ID for web/unauthenticated evaluation
+    demo_user = db.query(User).filter(User.email == "demo@behavioralwell.ai").first()
+    if demo_user:
+        return demo_user.id
+    return "usr_demo12345"
+
 @router.get("/me", response_model=UserResponse)
-def get_current_user(authorization: str = Header(None), db: Session = Depends(get_db)):
-    if not authorization or not authorization.startswith("Bearer "):
-        # Fallback to demo user for easy web evaluation if unauthenticated
-        demo_user = db.query(User).filter(User.email == "demo@behavioralwell.ai").first()
-        if demo_user:
-            return UserResponse.from_orm(demo_user)
-        raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
-
-    token = authorization.split(" ")[1]
-    payload = AuthService.decode_token(token)
-    if not payload or payload.get("type") != "access":
-        raise HTTPException(status_code=401, detail="Invalid token")
-
-    user = db.query(User).filter(User.id == payload.get("sub")).first()
+def get_current_user(user_id: str = Depends(get_current_user_id), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-
     return UserResponse.from_orm(user)
 
 @router.post("/logout")

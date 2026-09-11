@@ -19,6 +19,7 @@ class BehavioralWellApplication : Application() {
         database = AppDatabase.getInstance(this)
         tokenStorage = TokenStorage(this)
         ApiConfig.init(this)
+        ApiConfig.resetToDefault()
     }
 
     companion object {

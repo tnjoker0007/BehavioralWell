@@ -27,11 +27,12 @@ object RetrofitClient {
                 Log.d("BehavioralWellApi", sanitized)
             }
         }.apply {
-            level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BASIC else HttpLoggingInterceptor.Level.NONE
+            level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
             redactHeader("Authorization")
             redactHeader("Cookie")
             redactHeader("Set-Cookie")
         }
+
     }
 
     val okHttpClient: OkHttpClient by lazy {

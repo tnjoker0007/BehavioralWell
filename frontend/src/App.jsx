@@ -22,27 +22,25 @@ export default function App() {
   // Initial Data Fetch
   const loadUserData = async () => {
     setLoading(true);
-    const [risk, baseline, consent] = await Promise.all([
-      api.getLatestRisk(DEMO_USER_ID),
-      api.getUserBaseline(DEMO_USER_ID),
-      api.getConsent(DEMO_USER_ID)
-    ]);
+    const dashboard = await api.getDashboard();
 
-    setUserProfile({
-      id: DEMO_USER_ID,
-      name: "Alex Morgan",
-      email: "demo@behavioralwell.ai",
-      age_group: "25-34",
-      occupation_category: "Software Engineer",
-      created_at: new Date().toISOString(),
-      baseline_completed: true
-    });
-
-    if (risk) setRiskData(risk);
-    if (baseline) setBaselineData(baseline);
-    if (consent) setConsentData(consent);
+    if (dashboard) {
+      if (dashboard.user) setUserProfile(dashboard.user);
+      if (dashboard.current_risk) setRiskData(dashboard.current_risk);
+      if (dashboard.consent) setConsentData(dashboard.consent);
+    } else {
+      const [risk, baseline, consent] = await Promise.all([
+        api.getLatestRisk(DEMO_USER_ID),
+        api.getUserBaseline(DEMO_USER_ID),
+        api.getConsent(DEMO_USER_ID)
+      ]);
+      if (risk) setRiskData(risk);
+      if (baseline) setBaselineData(baseline);
+      if (consent) setConsentData(consent);
+    }
     setLoading(false);
   };
+
 
   useEffect(() => {
     loadUserData();

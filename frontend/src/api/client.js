@@ -22,6 +22,7 @@ export async function fetchJson(endpoint, options = {}) {
 }
 
 export const api = {
+  getDashboard: () => fetchJson('/dashboard'),
   getLatestRisk: (userId = DEMO_USER_ID) => fetchJson(`/risk/${userId}/latest`),
   getUserBaseline: (userId = DEMO_USER_ID) => fetchJson(`/telemetry/${userId}/baseline`),
   getConsent: (userId = DEMO_USER_ID) => fetchJson(`/consent/${userId}`),
@@ -35,3 +36,4 @@ export const api = {
   getConsultantPatients: () => fetchJson('/consultant/patients'),
   getResearchAnalytics: () => fetchJson('/analytics/overview'),
 };
+

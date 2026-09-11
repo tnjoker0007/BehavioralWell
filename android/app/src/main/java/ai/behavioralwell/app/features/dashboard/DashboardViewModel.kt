@@ -33,6 +33,11 @@ class DashboardViewModel : ViewModel() {
     fun loadDashboardData() {
         viewModelScope.launch(Dispatchers.IO) {
             _uiState.value = DashboardUiState.Loading
+            try {
+                repository.collectAndEnqueueAll()
+            } catch (_: Exception) {
+                // Ignore collection exceptions
+            }
             when (val result = repository.getDashboardData()) {
                 is NetworkResult.Success -> {
                     _uiState.value = DashboardUiState.Success(result.data)

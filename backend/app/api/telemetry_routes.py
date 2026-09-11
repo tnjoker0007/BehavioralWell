@@ -12,24 +12,58 @@ from app.services.temporal_engine import TemporalEngine
 from app.services.ml_risk_engine import MLRiskEngine
 from app.services.explainability import ExplainabilityEngine
 
+from app.api.auth_routes import get_current_user_id
+
 router = APIRouter(prefix="/telemetry", tags=["Telemetry & Processing"])
 
 @router.post("", response_model=RiskAssessmentResponse)
 @router.post("/ingest", response_model=RiskAssessmentResponse)
-def ingest_single_telemetry(telemetry_in: TelemetryInput, user_id: str = "usr_demo12345", db: Session = Depends(get_db)):
+def ingest_single_telemetry(telemetry_in: TelemetryInput, user_id: str = Depends(get_current_user_id), db: Session = Depends(get_db)):
     return process_telemetry_payload(user_id, telemetry_in, db)
 
 @router.post("/batch")
-def ingest_batch_telemetry(batch_in: BatchTelemetryInput, user_id: str = "usr_demo12345", db: Session = Depends(get_db)):
+def ingest_batch_telemetry(batch_in: BatchTelemetryInput, user_id: str = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Offline-first batch ingestion endpoint with idempotency deduplication.
     Allows Android client to queue local telemetry and upload upon reconnecting.
     """
     processed_count = 0
     skipped_count = 0
+    rejected_count = 0
     latest_assessment = None
 
-    for item in batch_in.batch:
+    print("\n[BACKEND TELEMETRY]")
+    print(f"user_id={user_id}")
+    print(f"batch_size={len(batch_in.batch)}")
+
+    for idx, item in enumerate(batch_in.batch, 1):
+        print(f"\nEvent #{idx}")
+        print(f"timestamp={item.timestamp}")
+        print(f"idempotency_key={item.idempotency_key}")
+
+        features = [
+            ("typing_speed", item.typing_speed),
+            ("key_press_duration", item.key_press_duration),
+            ("pause_duration", item.pause_duration),
+            ("correction_rate", item.correction_rate),
+            ("screen_time", item.screen_time),
+            ("unlock_count", item.unlock_count),
+            ("night_usage", item.night_usage),
+            ("app_switch_frequency", item.app_switch_frequency),
+            ("movement_intensity", item.movement_intensity),
+            ("acceleration_variance", item.acceleration_variance),
+            ("stationary_duration", item.stationary_duration),
+            ("task_accuracy", item.task_accuracy),
+            ("task_completion_time", item.task_completion_time),
+            ("task_error_rate", item.task_error_rate),
+            ("speed_variance", item.speed_variance),
+            ("route_variability", item.route_variability)
+        ]
+
+        for fname, val in features:
+            if val is not None:
+                print(f"{fname}={val}")
+
         # Check idempotency deduplication
         if item.idempotency_key:
             recent_telemetries = db.query(BehavioralTelemetry).filter(
@@ -39,8 +73,15 @@ def ingest_batch_telemetry(batch_in: BatchTelemetryInput, user_id: str = "usr_de
                 skipped_count += 1
                 continue
 
-        latest_assessment = process_telemetry_payload(user_id, item, db)
-        processed_count += 1
+        try:
+            latest_assessment = process_telemetry_payload(user_id, item, db)
+            processed_count += 1
+        except Exception:
+            rejected_count += 1
+
+    print(f"\naccepted={processed_count}")
+    print(f"duplicates={skipped_count}")
+    print(f"rejected={rejected_count}\n")
 
     return {
         "status": "success",
@@ -49,8 +90,10 @@ def ingest_batch_telemetry(batch_in: BatchTelemetryInput, user_id: str = "usr_de
         "latest_risk": latest_assessment
     }
 
+
 @router.get("/status", response_model=TelemetryStatusResponse)
-def get_telemetry_status(user_id: str = "usr_demo12345", db: Session = Depends(get_db)):
+def get_telemetry_status(user_id: str = Depends(get_current_user_id), db: Session = Depends(get_db)):
+
     records = db.query(BehavioralTelemetry).filter(BehavioralTelemetry.user_id == user_id).all()
     last_record = db.query(BehavioralTelemetry).filter(
         BehavioralTelemetry.user_id == user_id
@@ -69,6 +112,51 @@ def get_telemetry_status(user_id: str = "usr_demo12345", db: Session = Depends(g
         last_telemetry_at=last_record.timestamp if last_record else None,
         modalities_collected=list(collected_modalities)
     )
+
+@router.get("/latest")
+def get_latest_telemetry_raw(user_id: str = Depends(get_current_user_id), db: Session = Depends(get_db)):
+    last_record = db.query(BehavioralTelemetry).filter(
+        BehavioralTelemetry.user_id == user_id
+    ).order_by(BehavioralTelemetry.timestamp.desc()).first()
+
+    if not last_record:
+        raise HTTPException(status_code=404, detail="No telemetry records found for user")
+
+    return {
+        "id": last_record.id,
+        "user_id": last_record.user_id,
+        "timestamp": last_record.timestamp,
+        "sensor_inputs": {
+            "keyboard": {
+                "typing_speed": last_record.typing_speed,
+                "key_press_duration": last_record.key_press_duration,
+                "pause_duration": last_record.pause_duration,
+                "correction_rate": last_record.correction_rate
+            },
+            "usage": {
+                "screen_time": last_record.screen_time,
+                "unlock_count": last_record.unlock_count,
+                "night_usage": last_record.night_usage,
+                "app_switch_frequency": last_record.app_switch_frequency
+            },
+            "motion": {
+                "movement_intensity": last_record.movement_intensity,
+                "acceleration_variance": last_record.acceleration_variance,
+                "stationary_duration": last_record.stationary_duration
+            },
+            "work": {
+                "task_accuracy": last_record.task_accuracy,
+                "task_completion_time": last_record.task_completion_time,
+                "task_error_rate": last_record.task_error_rate
+            },
+            "mobility": {
+                "speed_variance": last_record.speed_variance,
+                "route_variability": last_record.route_variability
+            }
+        },
+        "raw_metadata": last_record.raw_features_json
+    }
+
 
 def process_telemetry_payload(user_id: str, telemetry_in: TelemetryInput, db: Session) -> RiskAssessmentResponse:
     consent = ConsentService.get_consent(db, user_id)

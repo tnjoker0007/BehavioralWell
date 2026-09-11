@@ -8,10 +8,12 @@ from app.api.baseline_routes import get_baseline_progress
 from app.api.risk_routes import get_current_risk
 from app.api.intervention_routes import get_recommendations
 
+from app.api.auth_routes import get_current_user_id
+
 router = APIRouter(prefix="/dashboard", tags=["Unified Mobile/Web Dashboard"])
 
 @router.get("", response_model=DashboardResponse)
-def get_unified_dashboard(user_id: str = "usr_demo12345", db: Session = Depends(get_db)):
+def get_unified_dashboard(user_id: str = Depends(get_current_user_id), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         user = db.query(User).filter(User.email == "demo@behavioralwell.ai").first()
