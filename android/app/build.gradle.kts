@@ -20,13 +20,15 @@ android {
             useSupportLibrary = true
         }
 
-        buildConfigField("String", "DEFAULT_API_BASE_URL", "\"http://192.168.1.55:8000/api/\"")
+        buildConfigField("String", "DEFAULT_API_BASE_URL", "\"http://127.0.0.1:8000/api/\"")
     }
 
-
-
     buildTypes {
+        debug {
+            buildConfigField("String", "DEFAULT_API_BASE_URL", "\"http://127.0.0.1:8000/api/\"")
+        }
         release {
+            buildConfigField("String", "DEFAULT_API_BASE_URL", "\"https://api.behavioralwell.ai/api/\"")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

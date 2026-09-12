@@ -2,8 +2,10 @@ package ai.behavioralwell.app.features.interventions
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
@@ -11,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -23,11 +26,11 @@ fun BreathingResetScreen(
     onComplete: () -> Unit,
     onClose: () -> Unit
 ) {
-    var phase by remember { mutableStateOf("Inhale") }
+    var phase by remember { mutableStateOf("INHALE") }
     var secondsLeft by remember { mutableIntStateOf(120) }
 
     LaunchedEffect(Unit) {
-        val phases = listOf("Inhale", "Hold", "Exhale", "Hold")
+        val phases = listOf("INHALE", "HOLD", "EXHALE", "HOLD")
         var phaseIdx = 0
         while (secondsLeft > 0) {
             phase = phases[phaseIdx % 4]
@@ -40,10 +43,10 @@ fun BreathingResetScreen(
 
     val infiniteTransition = rememberInfiniteTransition(label = "breathing")
     val circleSize by infiniteTransition.animateFloat(
-        initialValue = 120f,
+        initialValue = 140f,
         targetValue = 240f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 4000, easing = LinearEasing),
+            animation = tween(durationMillis = 4000, easing = LinearOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "size"
@@ -52,16 +55,16 @@ fun BreathingResetScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Breathing Reset", color = TextPrimaryDark) },
+                title = { Text("BREATHING RESET", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 16.sp, letterSpacing = 2.sp) },
                 actions = {
                     IconButton(onClick = onClose) {
-                        Icon(Icons.Default.Close, contentDescription = "Close", tint = TextPrimaryDark)
+                        Icon(Icons.Default.Close, contentDescription = "Close", tint = TextPrimary)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkSlateBackground)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg)
             )
         },
-        containerColor = DarkSlateBackground
+        containerColor = DarkBg
     ) { padding ->
         Column(
             modifier = Modifier
@@ -71,45 +74,80 @@ fun BreathingResetScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(
-                text = "Box Breathing (4-4-4-4)",
-                style = MaterialTheme.typography.titleLarge.copy(color = TextSecondaryDark)
-            )
+            Spacer(modifier = Modifier.height(12.dp))
 
+            // Central Animated Breathing Circle
             Box(
                 modifier = Modifier
                     .size(circleSize.dp)
                     .clip(CircleShape)
-                    .background(PrimaryTeal.copy(alpha = 0.3f)),
+                    .background(
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                PrimaryCyan.copy(alpha = 0.35f),
+                                AccentPurple.copy(alpha = 0.15f),
+                                DarkBg
+                            )
+                        )
+                    )
+                    .border(
+                        width = 2.dp,
+                        brush = Brush.linearGradient(listOf(PrimaryCyan, AccentPurple)),
+                        shape = CircleShape
+                    ),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = phase,
-                    style = MaterialTheme.typography.displayLarge.copy(
-                        color = TextPrimaryDark,
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = phase,
+                        style = MaterialTheme.typography.displayMedium.copy(
+                            color = TextPrimary,
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            letterSpacing = 3.sp
+                        )
                     )
-                )
+                    Text(
+                        text = "Follow the circle",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = TextMuted,
+                            fontSize = 12.sp
+                        ),
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
             }
 
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            // Bottom Timer & Actions
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(bottom = 24.dp)
+            ) {
                 Text(
                     text = "${secondsLeft / 60}:${(secondsLeft % 60).toString().padStart(2, '0')}",
                     style = MaterialTheme.typography.displayLarge.copy(
-                        color = PrimaryTealLight,
-                        fontSize = 32.sp,
+                        color = PrimaryCyan,
+                        fontSize = 42.sp,
                         fontWeight = FontWeight.Bold
                     )
                 )
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(
+
+                Text(
+                    text = "Autonomic Reset • Box Breathing 4-4-4-4",
+                    style = MaterialTheme.typography.bodyMedium.copy(color = TextMuted),
+                    modifier = Modifier.padding(top = 4.dp, bottom = 24.dp)
+                )
+
+                OutlinedButton(
                     onClick = onComplete,
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryTeal)
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = TextPrimary),
+                    modifier = Modifier.height(48.dp)
                 ) {
-                    Text("Finish Activity early")
+                    Text("Complete Activity")
                 }
             }
         }
     }
 }
+

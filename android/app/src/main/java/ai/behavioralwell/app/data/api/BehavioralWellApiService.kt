@@ -36,6 +36,10 @@ interface BehavioralWellApiService {
     @GET("telemetry/status")
     suspend fun getTelemetryStatus(): Response<TelemetryStatusResponse>
 
+    // --- DEV-ONLY Live Debug Stream ---
+    @POST("dev/telemetry")
+    suspend fun sendDevTelemetry(@Body payload: Map<String, @JvmSuppressWildcards Any>): Response<Map<String, Any>>
+
     // --- Baseline & Risk Staging ---
     @GET("baseline/progress")
     suspend fun getBaselineProgress(): Response<BaselineProgressResponse>

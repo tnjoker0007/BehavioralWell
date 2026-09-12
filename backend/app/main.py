@@ -12,7 +12,8 @@ from app.api import (
     analytics_routes,
     simulator_routes,
     baseline_routes,
-    dashboard_routes
+    dashboard_routes,
+    dev_telemetry_routes
 )
 from app.services.auth_service import AuthService
 from app.schemas.dto import UserCreate
@@ -37,6 +38,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Mount DEV page router directly at root
+app.include_router(dev_telemetry_routes.page_router)
+
 # Mount API routes under /api/v1 AND /api for Android client backwards-compatibility
 for prefix in [settings.API_V1_STR, "/api"]:
     app.include_router(auth_routes.router, prefix=prefix)
@@ -50,6 +54,7 @@ for prefix in [settings.API_V1_STR, "/api"]:
     app.include_router(simulator_routes.router, prefix=prefix)
     app.include_router(baseline_routes.router, prefix=prefix)
     app.include_router(dashboard_routes.router, prefix=prefix)
+    app.include_router(dev_telemetry_routes.router, prefix=prefix)
 
 @app.on_event("startup")
 def seed_demo_data():

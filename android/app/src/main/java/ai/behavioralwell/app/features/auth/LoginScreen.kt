@@ -2,11 +2,16 @@ package ai.behavioralwell.app.features.auth
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -34,33 +39,45 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(DarkSlateBackground)
+            .background(DarkBg)
             .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = SurfaceSlate),
-            shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        BehavioralWellGlassCard(
+            modifier = Modifier.fillMaxWidth()
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                Box(
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(CircleShape)
+                        .background(PrimaryCyanGlow),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Psychology,
+                        contentDescription = "BehavioralWell Logo",
+                        tint = PrimaryCyan,
+                        modifier = Modifier.size(36.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 Text(
                     text = "BehavioralWell",
-                    style = MaterialTheme.typography.displayLarge.copy(
-                        color = PrimaryTealLight,
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        color = TextPrimaryDark,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 26.sp
                     )
                 )
 
                 Text(
-                    text = "Multimodal Behavioral Phenotyping Platform",
+                    text = "Understand your patterns. Support your wellbeing.",
                     style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondaryDark),
                     modifier = Modifier.padding(top = 4.dp, bottom = 24.dp)
                 )
@@ -71,15 +88,18 @@ fun LoginScreen(
                     label = { Text("Email Address", color = TextSecondaryDark) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = PrimaryTealLight,
-                        unfocusedBorderColor = BorderSlate,
+                        focusedBorderColor = PrimaryCyan,
+                        unfocusedBorderColor = BorderGlass,
                         focusedTextColor = TextPrimaryDark,
-                        unfocusedTextColor = TextPrimaryDark
+                        unfocusedTextColor = TextPrimaryDark,
+                        focusedContainerColor = Color(0x331E293B),
+                        unfocusedContainerColor = Color(0x331E293B)
                     )
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
                 OutlinedTextField(
                     value = password,
@@ -88,11 +108,14 @@ fun LoginScreen(
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = PrimaryTealLight,
-                        unfocusedBorderColor = BorderSlate,
+                        focusedBorderColor = PrimaryCyan,
+                        unfocusedBorderColor = BorderGlass,
                         focusedTextColor = TextPrimaryDark,
-                        unfocusedTextColor = TextPrimaryDark
+                        unfocusedTextColor = TextPrimaryDark,
+                        focusedContainerColor = Color(0x331E293B),
+                        unfocusedContainerColor = Color(0x331E293B)
                     )
                 )
 
@@ -100,36 +123,20 @@ fun LoginScreen(
                     Text(
                         text = (uiState as AuthUiState.Error).message,
                         color = Stage4HighConcern,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(top = 12.dp)
                     )
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                Button(
-                    onClick = { viewModel.login(email, password) },
-                    enabled = uiState !is AuthUiState.Loading,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryTeal),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    if (uiState is AuthUiState.Loading) {
-                        CircularProgressIndicator(
-                            color = TextPrimaryDark,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    } else {
-                        Text(
-                            text = "Sign In",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontSize = 16.sp,
-                                color = TextPrimaryDark
-                            )
-                        )
-                    }
+                if (uiState is AuthUiState.Loading) {
+                    CircularProgressIndicator(color = PrimaryCyan)
+                } else {
+                    GradientButton(
+                        text = "Sign In",
+                        onClick = { viewModel.login(email, password) }
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -137,7 +144,7 @@ fun LoginScreen(
                 TextButton(onClick = onNavigateToRegister) {
                     Text(
                         text = "Don't have an account? Register here",
-                        color = PrimaryTealLight,
+                        color = PrimaryCyan,
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }

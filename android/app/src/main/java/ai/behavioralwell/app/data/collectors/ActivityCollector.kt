@@ -27,4 +27,9 @@ class ActivityCollector(
         if (!isHardwareAvailable() || !hasPermission() || !isConsentGranted()) return null
         return null
     }
+
+    fun currentSnapshot(): Map<String, Any>? {
+        if (!isHardwareAvailable() || !hasPermission() || !isConsentGranted()) return null
+        return null
+    }
 }

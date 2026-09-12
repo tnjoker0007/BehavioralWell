@@ -33,5 +33,13 @@ class MobilityCollector(
             routeVariability = routeVariabilityVal
         )
     }
+
+    fun currentSnapshot(): Map<String, Any>? {
+        if (!isConsentGranted() || speedVarianceVal == null) return null
+        return mapOf(
+            "speedVariance" to (speedVarianceVal ?: 0.0f),
+            "routeVariability" to (routeVariabilityVal ?: 0.0f)
+        )
+    }
 }
 

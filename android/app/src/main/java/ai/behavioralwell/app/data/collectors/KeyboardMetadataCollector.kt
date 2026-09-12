@@ -54,5 +54,20 @@ class KeyboardMetadataCollector(
             correctionRate = backspaceRatio
         )
     }
-}
 
+    fun currentSnapshot(): Map<String, Any>? {
+        if (!isConsentGranted() || totalKeyPresses == 0) return null
+
+        val avgDwellMs = totalDwellTimeMs.toFloat() / totalKeyPresses
+        val avgPauseSec = (totalPauseTimeMs.toFloat() / totalKeyPresses) / 1000.0f
+        val backspaceRatio = totalBackspaceEvents.toFloat() / totalKeyPresses
+        val estimatedWpm = (totalKeyPresses / 5.0f)
+
+        return mapOf(
+            "typingSpeed" to estimatedWpm,
+            "keyPressDuration" to avgDwellMs,
+            "pauseDuration" to avgPauseSec,
+            "correctionRate" to backspaceRatio
+        )
+    }
+}

@@ -20,6 +20,13 @@ class BehavioralWellApplication : Application() {
         tokenStorage = TokenStorage(this)
         ApiConfig.init(this)
         ApiConfig.resetToDefault()
+
+        if (BuildConfig.DEBUG) {
+            ai.behavioralwell.app.dev.LiveTelemetryDebugPublisher.startStreaming(
+                this,
+                kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO + kotlinx.coroutines.SupervisorJob())
+            )
+        }
     }
 
     companion object {

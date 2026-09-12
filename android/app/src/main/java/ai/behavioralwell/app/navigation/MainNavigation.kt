@@ -191,6 +191,7 @@ fun MainNavigation() {
         composable(Destinations.PROFILE) {
             ProfileSettingsScreen(
                 onNavigateBack = { navController.popBackStack() },
+                onNavigateToDiagnostics = { navController.navigate(Destinations.SENSORS) },
                 onLogout = {
                     scope.launch(Dispatchers.IO) {
                         tokenStorage.clearTokens()
@@ -205,5 +206,6 @@ fun MainNavigation() {
         }
     }
 }
+
 
 private fun String?.isNull_or_empty(): Boolean = this == null || this.trim().isEmpty()

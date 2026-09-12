@@ -34,11 +34,11 @@ class TelemetryRepository(private val context: Context) {
         val userId = TokenStorage(context).getUserId() ?: "unknown_user"
         Log.d("BehavioralWellTelemetry", "Telemetry collection started for userId: $userId")
 
-        val usageCollector = ai.behavioralwell.app.data.collectors.DeviceUsageCollector(context)
-        val motionCollector = ai.behavioralwell.app.data.collectors.MotionCollector(context)
-        val keyboardCollector = ai.behavioralwell.app.data.collectors.KeyboardMetadataCollector(context)
-        val mobilityCollector = ai.behavioralwell.app.data.collectors.MobilityCollector(context)
-        val activityCollector = ai.behavioralwell.app.data.collectors.ActivityCollector(context)
+        val usageCollector = ai.behavioralwell.app.data.collectors.CollectorRegistry.getUsageCollector(context)
+        val motionCollector = ai.behavioralwell.app.data.collectors.CollectorRegistry.getMotionCollector(context)
+        val keyboardCollector = ai.behavioralwell.app.data.collectors.CollectorRegistry.getKeyboardCollector(context)
+        val mobilityCollector = ai.behavioralwell.app.data.collectors.CollectorRegistry.getMobilityCollector(context)
+        val activityCollector = ai.behavioralwell.app.data.collectors.CollectorRegistry.getActivityCollector(context)
 
         val usageInput = usageCollector.collectTelemetry()
         val motionInput = motionCollector.collectTelemetry()

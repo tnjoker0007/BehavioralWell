@@ -27,7 +27,8 @@ class MotionCollector(
     private val gyroscope = sensorManager?.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
 
     private val accelerationBuffer = mutableListOf<Float>()
-    private var stationarySecondsCount = 0
+    private var stationaryMsAccumulated = 0L
+    private var lastSampleTimeMs = 0L
 
     private val backgroundThread = HandlerThread("MotionSensorThread").apply { start() }
     private val backgroundHandler = Handler(backgroundThread.looper)
@@ -54,17 +55,9 @@ class MotionCollector(
         }
     }
 
-    override fun isHardwareAvailable(): Boolean {
-        return accelerometer != null
-    }
-
-    override fun hasPermission(): Boolean {
-        return true
-    }
-
-    override fun isConsentGranted(): Boolean {
-        return consentGranted
-    }
+    override fun isHardwareAvailable(): Boolean = accelerometer != null
+    override fun hasPermission(): Boolean = true
+    override fun isConsentGranted(): Boolean = consentGranted
 
     override fun onSensorChanged(event: SensorEvent?) {
         if (event == null || !consentGranted) return
@@ -73,18 +66,26 @@ class MotionCollector(
             val x = event.values[0]
             val y = event.values[1]
             val z = event.values[2]
-            val magnitude = sqrt(x.pow(2) + y.pow(2) + z.pow(2)) - SensorManager.GRAVITY_EARTH
+            val rawMagnitude = sqrt(x.pow(2) + y.pow(2) + z.pow(2))
+            val devMagnitude = kotlin.math.abs(rawMagnitude - SensorManager.GRAVITY_EARTH)
 
             synchronized(accelerationBuffer) {
                 if (accelerationBuffer.size >= 100) {
                     accelerationBuffer.removeAt(0)
                 }
-                accelerationBuffer.add(magnitude)
+                accelerationBuffer.add(devMagnitude)
             }
 
-            if (magnitude < 0.2f) {
-                stationarySecondsCount += 1
+            val now = System.currentTimeMillis()
+            if (devMagnitude < 0.25f) {
+                if (lastSampleTimeMs > 0) {
+                    val delta = now - lastSampleTimeMs
+                    if (delta in 1..1000) {
+                        stationaryMsAccumulated += delta
+                    }
+                }
             }
+            lastSampleTimeMs = now
         }
     }
 
@@ -103,7 +104,7 @@ class MotionCollector(
             Pair(mean, varianceVal)
         }
 
-        val stationaryMins = (stationarySecondsCount / 60.0f)
+        val stationaryMins = (stationaryMsAccumulated / (1000.0f * 60.0f))
 
         TelemetryInput(
             movementIntensity = intensity,
@@ -111,5 +112,29 @@ class MotionCollector(
             stationaryDuration = stationaryMins
         )
     }
+
+    fun currentSnapshot(): Map<String, Any>? {
+        if (!isHardwareAvailable() || !hasPermission() || !isConsentGranted()) return null
+
+        val (intensity, variance) = synchronized(accelerationBuffer) {
+            if (accelerationBuffer.isEmpty()) return@synchronized Pair(0.0f, 0.0f)
+
+            val mean = accelerationBuffer.average().toFloat()
+            val varSum = accelerationBuffer.fold(0.0f) { acc, valNum -> acc + (valNum - mean).pow(2) }
+            val varianceVal = varSum / accelerationBuffer.size
+
+            Pair(mean, varianceVal)
+        }
+
+        val stationaryMins = (stationaryMsAccumulated / (1000.0f * 60.0f))
+
+        return mapOf(
+            "movementIntensity" to intensity,
+            "accelerationVariance" to variance,
+            "stationaryDuration" to stationaryMins
+        )
+    }
 }
+
+
 

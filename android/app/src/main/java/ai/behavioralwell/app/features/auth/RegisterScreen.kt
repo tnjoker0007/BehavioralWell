@@ -2,7 +2,6 @@ package ai.behavioralwell.app.features.auth
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -13,7 +12,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ai.behavioralwell.app.core.design.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
     viewModel: AuthViewModel,
@@ -35,48 +33,70 @@ fun RegisterScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(DarkSlateBackground)
+            .background(DarkBg)
             .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = SurfaceSlate),
-            shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        BehavioralWellGlassCard(
+            modifier = Modifier.fillMaxWidth()
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(24.dp),
+                    .padding(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Brand Header
+                Box(
+                    modifier = Modifier
+                        .size(54.dp)
+                        .background(
+                            brush = androidx.compose.ui.graphics.Brush.linearGradient(
+                                colors = listOf(PrimaryCyan, AccentPurple)
+                            ),
+                            shape = androidx.compose.foundation.shape.CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "BW",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            color = TextPrimary,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 Text(
                     text = "Create Account",
-                    style = MaterialTheme.typography.displayLarge.copy(
-                        color = PrimaryTealLight,
-                        fontSize = 26.sp,
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        color = TextPrimary,
                         fontWeight = FontWeight.Bold
                     )
                 )
 
                 Text(
                     text = "Join BehavioralWell Privacy Telemetry Platform",
-                    style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondaryDark),
-                    modifier = Modifier.padding(top = 4.dp, bottom = 20.dp)
+                    style = MaterialTheme.typography.bodyMedium.copy(color = TextMuted),
+                    modifier = Modifier.padding(top = 4.dp, bottom = 24.dp)
                 )
 
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Full Name", color = TextSecondaryDark) },
+                    label = { Text("Full Name", color = TextMuted) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = PrimaryTealLight,
-                        unfocusedBorderColor = BorderSlate,
-                        focusedTextColor = TextPrimaryDark,
-                        unfocusedTextColor = TextPrimaryDark
+                        focusedBorderColor = PrimaryCyan,
+                        unfocusedBorderColor = GlassBorder,
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary,
+                        focusedContainerColor = DarkBg.copy(alpha = 0.5f),
+                        unfocusedContainerColor = DarkBg.copy(alpha = 0.3f)
                     )
                 )
 
@@ -85,14 +105,17 @@ fun RegisterScreen(
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
-                    label = { Text("Email Address", color = TextSecondaryDark) },
+                    label = { Text("Email Address", color = TextMuted) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = PrimaryTealLight,
-                        unfocusedBorderColor = BorderSlate,
-                        focusedTextColor = TextPrimaryDark,
-                        unfocusedTextColor = TextPrimaryDark
+                        focusedBorderColor = PrimaryCyan,
+                        unfocusedBorderColor = GlassBorder,
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary,
+                        focusedContainerColor = DarkBg.copy(alpha = 0.5f),
+                        unfocusedContainerColor = DarkBg.copy(alpha = 0.3f)
                     )
                 )
 
@@ -101,22 +124,25 @@ fun RegisterScreen(
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = { Text("Password", color = TextSecondaryDark) },
+                    label = { Text("Password", color = TextMuted) },
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = PrimaryTealLight,
-                        unfocusedBorderColor = BorderSlate,
-                        focusedTextColor = TextPrimaryDark,
-                        unfocusedTextColor = TextPrimaryDark
+                        focusedBorderColor = PrimaryCyan,
+                        unfocusedBorderColor = GlassBorder,
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary,
+                        focusedContainerColor = DarkBg.copy(alpha = 0.5f),
+                        unfocusedContainerColor = DarkBg.copy(alpha = 0.3f)
                     )
                 )
 
                 if (uiState is AuthUiState.Error) {
                     Text(
                         text = (uiState as AuthUiState.Error).message,
-                        color = Stage4HighConcern,
+                        color = Stage4Color,
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(top = 12.dp)
                     )
@@ -124,37 +150,19 @@ fun RegisterScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                Button(
+                GradientButton(
+                    text = "Create Account",
                     onClick = { viewModel.register(name, email, password) },
-                    enabled = uiState !is AuthUiState.Loading,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryTeal),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    if (uiState is AuthUiState.Loading) {
-                        CircularProgressIndicator(
-                            color = TextPrimaryDark,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    } else {
-                        Text(
-                            text = "Register",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontSize = 16.sp,
-                                color = TextPrimaryDark
-                            )
-                        )
-                    }
-                }
+                    isLoading = uiState is AuthUiState.Loading,
+                    modifier = Modifier.fillMaxWidth()
+                )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 TextButton(onClick = onNavigateToLogin) {
                     Text(
                         text = "Already have an account? Sign in",
-                        color = PrimaryTealLight,
+                        color = PrimaryCyan,
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -162,3 +170,4 @@ fun RegisterScreen(
         }
     }
 }
+
