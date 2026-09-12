@@ -77,10 +77,17 @@ class DeviceUsageCollector(
     }
 
     fun currentSnapshot(): Map<String, Any>? {
-        if (!isHardwareAvailable() || !hasPermission() || !isConsentGranted()) return null
+        if (!isHardwareAvailable() || !isConsentGranted()) return null
+
+        if (!hasPermission()) {
+            return mapOf(
+                "status" to "USAGE_ACCESS_REQUIRED",
+                "error" to "Usage Access Required"
+            )
+        }
 
         val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as? UsageStatsManager
-            ?: return null
+            ?: return mapOf("status" to "USAGE_SERVICE_UNAVAILABLE")
 
         val calendar = Calendar.getInstance()
         val endTime = calendar.timeInMillis
@@ -94,6 +101,10 @@ class DeviceUsageCollector(
             startTime,
             endTime
         ) ?: emptyList()
+
+        if (stats.isEmpty()) {
+            return mapOf("status" to "WAITING_FOR_USAGE_DATA")
+        }
 
         var totalTimeForegroundMs = 0L
         var nightTimeForegroundMs = 0L
@@ -119,6 +130,7 @@ class DeviceUsageCollector(
         val switchFrequency = if (screenTimeHours > 0) appLaunches / screenTimeHours else 0.0f
 
         return mapOf(
+            "status" to "LIVE",
             "screenTime" to screenTimeHours,
             "unlockCount" to appLaunches,
             "nightUsage" to nightUsageHours,

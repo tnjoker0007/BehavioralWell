@@ -34,11 +34,7 @@ class KeyboardMetadataCollector(
     }
 
     override suspend fun collectTelemetry(): TelemetryInput? {
-        if (!isConsentGranted()) return null
-
-        if (totalKeyPresses == 0) {
-            return null
-        }
+        if (!isConsentGranted() || totalKeyPresses == 0) return null
 
         val avgDwellMs = totalDwellTimeMs.toFloat() / totalKeyPresses
         val avgPauseSec = (totalPauseTimeMs.toFloat() / totalKeyPresses) / 1000.0f
@@ -56,7 +52,13 @@ class KeyboardMetadataCollector(
     }
 
     fun currentSnapshot(): Map<String, Any>? {
-        if (!isConsentGranted() || totalKeyPresses == 0) return null
+        if (!isConsentGranted()) return null
+
+        if (totalKeyPresses == 0) {
+            return mapOf(
+                "status" to "WAITING_FOR_INPUT"
+            )
+        }
 
         val avgDwellMs = totalDwellTimeMs.toFloat() / totalKeyPresses
         val avgPauseSec = (totalPauseTimeMs.toFloat() / totalKeyPresses) / 1000.0f
@@ -64,6 +66,7 @@ class KeyboardMetadataCollector(
         val estimatedWpm = (totalKeyPresses / 5.0f)
 
         return mapOf(
+            "status" to "LIVE",
             "typingSpeed" to estimatedWpm,
             "keyPressDuration" to avgDwellMs,
             "pauseDuration" to avgPauseSec,

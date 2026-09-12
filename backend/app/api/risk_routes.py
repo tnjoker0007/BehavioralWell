@@ -7,6 +7,7 @@ from app.schemas.dto import RiskAssessmentResponse, RiskHistoryResponse
 from app.models.domain import RiskAssessment
 
 from app.api.auth_routes import get_current_user_id
+from app.services.llm_interpreter import LLMInterpreter
 
 router = APIRouter(prefix="/risk", tags=["Risk Staging & Engine"])
 
@@ -65,6 +66,28 @@ def get_risk_history(user_id: str = Depends(get_current_user_id), limit: int = 3
 
     return RiskHistoryResponse(history=history)
 
+@router.get("/interpret")
+def get_risk_interpretation(user_id: str = Depends(get_current_user_id), db: Session = Depends(get_db)):
+    """
+    Returns a short, supportive, non-diagnostic natural-language explanation
+    of the user's latest risk assessment via OpenRouter. Stage 5 (crisis) is
+    excluded — that uses static resource copy instead of LLM interpretation.
+    """
+    assessment = get_current_risk(user_id=user_id, db=db)
+
+    if assessment.stage >= 5:
+        raise HTTPException(
+            status_code=400,
+            detail="Stage 5 uses static crisis-resource routing, not LLM interpretation."
+        )
+
+    text = LLMInterpreter.interpret_risk(assessment.dict())
+    return {
+        "stage": assessment.stage,
+        "stage_label": assessment.stage_label,
+        "interpretation": text
+    }
+
 @router.get("/explanation")
 def get_risk_explanation(user_id: str = "usr_demo12345", db: Session = Depends(get_db)):
     assessment = get_current_risk(user_id=user_id, db=db)
@@ -74,3 +97,4 @@ def get_risk_explanation(user_id: str = "usr_demo12345", db: Session = Depends(g
         "stage_label": assessment.stage_label,
         "factors": assessment.top_contributors
     }
+

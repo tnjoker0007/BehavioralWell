@@ -524,44 +524,87 @@ async def dev_telemetry_dashboard_page():
 
             // 2. Usage
             if (data.usage) {
-                const screenTime = data.usage.screenTime;
-                const unlock = data.usage.unlockCount;
-                const night = data.usage.nightUsage;
-                const freq = data.usage.appSwitchFrequency;
+                const status = data.usage.status;
+                if (status === 'USAGE_ACCESS_REQUIRED') {
+                    updateStatusMetric('val_screenTime', 'Usage Access Required', 'usageChanged', 'usage', now, 'warning');
+                    updateStatusMetric('val_unlockCount', 'Usage Access Required', 'usageChanged', 'usage', now, 'warning');
+                    updateStatusMetric('val_nightUsage', 'Usage Access Required', 'usageChanged', 'usage', now, 'warning');
+                    updateStatusMetric('val_appSwitchFrequency', 'Usage Access Required', 'usageChanged', 'usage', now, 'warning');
+                } else if (status === 'WAITING_FOR_USAGE_DATA') {
+                    updateStatusMetric('val_screenTime', 'Waiting for Usage Data', 'usageChanged', 'usage', now, 'waiting');
+                    updateStatusMetric('val_unlockCount', 'Waiting for Usage Data', 'usageChanged', 'usage', now, 'waiting');
+                    updateStatusMetric('val_nightUsage', 'Waiting for Usage Data', 'usageChanged', 'usage', now, 'waiting');
+                    updateStatusMetric('val_appSwitchFrequency', 'Waiting for Usage Data', 'usageChanged', 'usage', now, 'waiting');
+                } else {
+                    const screenTime = data.usage.screenTime;
+                    const unlock = data.usage.unlockCount;
+                    const night = data.usage.nightUsage;
+                    const freq = data.usage.appSwitchFrequency;
 
-                updateMetric('val_screenTime', screenTime !== undefined && screenTime !== null ? screenTime.toFixed(2) + ' hrs' : null, 'usageChanged', 'usage', now);
-                updateMetric('val_unlockCount', unlock !== undefined && unlock !== null ? unlock : null, 'usageChanged', 'usage', now);
-                updateMetric('val_nightUsage', night !== undefined && night !== null ? night.toFixed(2) + ' hrs' : null, 'usageChanged', 'usage', now);
-                updateMetric('val_appSwitchFrequency', freq !== undefined && freq !== null ? freq.toFixed(1) + ' /hr' : null, 'usageChanged', 'usage', now);
+                    updateMetric('val_screenTime', screenTime !== undefined && screenTime !== null ? screenTime.toFixed(2) + ' hrs' : null, 'usageChanged', 'usage', now);
+                    updateMetric('val_unlockCount', unlock !== undefined && unlock !== null ? unlock : null, 'usageChanged', 'usage', now);
+                    updateMetric('val_nightUsage', night !== undefined && night !== null ? night.toFixed(2) + ' hrs' : null, 'usageChanged', 'usage', now);
+                    updateMetric('val_appSwitchFrequency', freq !== undefined && freq !== null ? freq.toFixed(1) + ' /hr' : null, 'usageChanged', 'usage', now);
+                }
             }
 
             // 3. Keyboard
             if (data.keyboard) {
-                const speed = data.keyboard.typingSpeed;
-                const dwell = data.keyboard.keyPressDuration;
-                const pause = data.keyboard.pauseDuration;
-                const corr = data.keyboard.correctionRate;
+                const status = data.keyboard.status;
+                if (status === 'WAITING_FOR_INPUT') {
+                    updateStatusMetric('val_typingSpeed', 'Waiting for Typing Input', 'keyboardChanged', 'keyboard', now, 'waiting');
+                    updateStatusMetric('val_keyPressDuration', 'Waiting for Typing Input', 'keyboardChanged', 'keyboard', now, 'waiting');
+                    updateStatusMetric('val_pauseDuration', 'Waiting for Typing Input', 'keyboardChanged', 'keyboard', now, 'waiting');
+                    updateStatusMetric('val_correctionRate', 'Waiting for Typing Input', 'keyboardChanged', 'keyboard', now, 'waiting');
+                } else {
+                    const speed = data.keyboard.typingSpeed;
+                    const dwell = data.keyboard.keyPressDuration;
+                    const pause = data.keyboard.pauseDuration;
+                    const corr = data.keyboard.correctionRate;
 
-                updateMetric('val_typingSpeed', speed !== undefined && speed !== null ? speed.toFixed(1) + ' WPM' : null, 'keyboardChanged', 'keyboard', now);
-                updateMetric('val_keyPressDuration', dwell !== undefined && dwell !== null ? dwell.toFixed(0) + ' ms' : null, 'keyboardChanged', 'keyboard', now);
-                updateMetric('val_pauseDuration', pause !== undefined && pause !== null ? pause.toFixed(2) + ' s' : null, 'keyboardChanged', 'keyboard', now);
-                updateMetric('val_correctionRate', corr !== undefined && corr !== null ? (corr * 100).toFixed(1) + ' %' : null, 'keyboardChanged', 'keyboard', now);
+                    updateMetric('val_typingSpeed', speed !== undefined && speed !== null ? speed.toFixed(1) + ' WPM' : null, 'keyboardChanged', 'keyboard', now);
+                    updateMetric('val_keyPressDuration', dwell !== undefined && dwell !== null ? dwell.toFixed(0) + ' ms' : null, 'keyboardChanged', 'keyboard', now);
+                    updateMetric('val_pauseDuration', pause !== undefined && pause !== null ? pause.toFixed(2) + ' s' : null, 'keyboardChanged', 'keyboard', now);
+                    updateMetric('val_correctionRate', corr !== undefined && corr !== null ? (corr * 100).toFixed(1) + ' %' : null, 'keyboardChanged', 'keyboard', now);
+                }
             }
 
             // 4. Activity
             if (data.activity) {
+                const status = data.activity.status;
                 const actInt = data.activity.movementIntensity;
-                updateMetric('val_activityMovementIntensity', actInt !== undefined && actInt !== null ? actInt.toFixed(2) : null, 'activityChanged', 'activity', now);
+                const actState = data.activity.activityState || 'Live';
+                if (status === 'WAITING_FOR_MOTION') {
+                    updateStatusMetric('val_activityMovementIntensity', 'Waiting for Motion Data', 'activityChanged', 'activity', now, 'waiting');
+                } else {
+                    updateMetric('val_activityMovementIntensity', actInt !== undefined && actInt !== null ? actInt.toFixed(2) + ' (' + actState + ')' : null, 'activityChanged', 'activity', now);
+                }
             }
 
             // 5. Mobility
             if (data.mobility) {
-                const spd = data.mobility.speedVariance;
-                const rte = data.mobility.routeVariability;
+                const status = data.mobility.status;
+                if (status === 'LOCATION_PERMISSION_REQUIRED') {
+                    updateStatusMetric('val_speedVariance', 'Location Permission Required', 'mobilityChanged', 'mobility', now, 'warning');
+                    updateStatusMetric('val_routeVariability', 'Location Permission Required', 'mobilityChanged', 'mobility', now, 'warning');
+                } else if (status === 'WAITING_FOR_LOCATION') {
+                    updateStatusMetric('val_speedVariance', 'Waiting for Location Fix', 'mobilityChanged', 'mobility', now, 'waiting');
+                    updateStatusMetric('val_routeVariability', 'Waiting for Location Fix', 'mobilityChanged', 'mobility', now, 'waiting');
+                } else {
+                    const spd = data.mobility.speedVariance;
+                    const rte = data.mobility.routeVariability;
 
-                updateMetric('val_speedVariance', spd !== undefined && spd !== null ? spd.toFixed(2) : null, 'mobilityChanged', 'mobility', now);
-                updateMetric('val_routeVariability', rte !== undefined && rte !== null ? rte.toFixed(2) : null, 'mobilityChanged', 'mobility', now);
+                    updateMetric('val_speedVariance', spd !== undefined && spd !== null ? spd.toFixed(2) : null, 'mobilityChanged', 'mobility', now);
+                    updateMetric('val_routeVariability', rte !== undefined && rte !== null ? rte.toFixed(2) : null, 'mobilityChanged', 'mobility', now);
+                }
             }
+        }
+
+        function updateStatusMetric(elementId, text, categoryHeaderId, categoryKey, nowTime, statusType) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            el.innerText = text;
+            el.className = 'metric-value ' + statusType;
         }
 
         function updateMetric(elementId, valStr, categoryHeaderId, categoryKey, nowTime) {

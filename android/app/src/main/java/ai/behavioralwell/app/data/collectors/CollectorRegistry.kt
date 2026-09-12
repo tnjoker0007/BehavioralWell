@@ -1,6 +1,7 @@
 package ai.behavioralwell.app.data.collectors
 
 import android.content.Context
+import android.util.Log
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -75,6 +76,15 @@ object CollectorRegistry {
         if (keyboard != null) payload["keyboard"] = keyboard
         if (mobility != null) payload["mobility"] = mobility
         if (activity != null) payload["activity"] = activity
+
+        Log.d(
+            "COLLECTOR_SNAPSHOT",
+            "[COLLECTOR SNAPSHOT] motion=${motion?.get("status") ?: "AVAILABLE"} " +
+                    "usage=${usage?.get("status") ?: "UNAVAILABLE"} " +
+                    "keyboard=${keyboard?.get("status") ?: "UNAVAILABLE"} " +
+                    "activity=${activity?.get("status") ?: "UNAVAILABLE"} " +
+                    "mobility=${mobility?.get("status") ?: "UNAVAILABLE"}"
+        )
 
         return payload
     }

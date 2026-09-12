@@ -1,4 +1,6 @@
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 class Settings:
     PROJECT_NAME: str = "BehavioralWell — AI Multimodal Behavioral Risk Engine"
@@ -16,4 +18,11 @@ class Settings:
     # Models directory
     MODEL_DIR: str = os.path.join(os.path.dirname(__file__), "..", "ml_pipeline", "models")
 
+    # LLM interpretation layer (via OpenRouter)
+    OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
+    OPENROUTER_MODEL: str = os.getenv("OPENROUTER_MODEL", "anthropic/claude-sonnet-4.6")
+    SITE_URL: str = os.getenv("SITE_URL", "")
+    SITE_NAME: str = os.getenv("SITE_NAME", "BehavioralWell")
+
 settings = Settings()
+
