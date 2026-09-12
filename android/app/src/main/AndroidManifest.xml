@@ -16,6 +16,8 @@
     <!-- Background Services & Boot -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
@@ -53,6 +55,13 @@
             </intent-filter>
         </activity>
 
+        <!-- Background Telemetry Service -->
+        <service
+            android:name=".data.services.TelemetryForegroundService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
         <!-- WorkManager Auto-initializer -->
         <provider
             android:name="androidx.startup.InitializationProvider"
@@ -65,5 +74,6 @@
         </provider>
 
     </application>
+
 
 </manifest>
