@@ -4,6 +4,7 @@ import android.app.usage.UsageEvents
 import android.app.usage.UsageStats
 import android.app.usage.UsageStatsManager
 import android.content.Context
+import android.content.Intent
 import ai.behavioralwell.app.core.permissions.SensorPermissionManager
 import ai.behavioralwell.app.core.sensors.SensorCollector
 import ai.behavioralwell.app.core.sensors.SensorType
@@ -18,6 +19,15 @@ class DeviceUsageCollector(
     override val sensorType: SensorType = SensorType.APP_USAGE
 
     private val permissionManager = SensorPermissionManager(context)
+
+    private val defaultLauncherPackage: String? by lazy {
+        try {
+            val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+            context.packageManager.resolveActivity(intent, 0)?.activityInfo?.packageName
+        } catch (e: Exception) {
+            null
+        }
+    }
 
     override fun isHardwareAvailable(): Boolean = true
 
@@ -57,95 +67,110 @@ class DeviceUsageCollector(
         val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as? UsageStatsManager
             ?: return mapOf("status" to "USAGE_SERVICE_UNAVAILABLE")
 
+        // 1. Precise local midnight bounds
         val calendar = Calendar.getInstance()
         val endTime = calendar.timeInMillis
         calendar.set(Calendar.HOUR_OF_DAY, 0)
         calendar.set(Calendar.MINUTE, 0)
         calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
         val startTime = calendar.timeInMillis
 
-        // Precision UsageEvents processing for exact user screen time
+        var unlockCount = 0
+        var appSwitchCount = 0
+        var totalForegroundMs = 0L
+        var nightForegroundMs = 0L
+
         val usageEvents = try {
             usageStatsManager.queryEvents(startTime, endTime)
         } catch (e: Exception) {
             null
         }
 
-        var totalForegroundMs = 0L
-        var nightForegroundMs = 0L
-        var unlockCount = 0
-        var appSwitchCount = 0
-
         if (usageEvents != null) {
             val event = UsageEvents.Event()
-            var currentPackage: String? = null
-            var currentStartTime: Long = 0L
+            var activeApp: String? = null
+            var activeAppStartMs = 0L
 
             while (usageEvents.hasNextEvent()) {
                 usageEvents.getNextEvent(event)
-
-                // eventType: 1=MOVE_TO_FOREGROUND/ACTIVITY_RESUMED, 2=MOVE_TO_BACKGROUND/ACTIVITY_PAUSED
-                // 15=SCREEN_INTERACTIVE, 16=SCREEN_NON_INTERACTIVE, 17=KEYGUARD_DISMISSED
                 val type = event.eventType
-                if (type == 15 || type == 17) {
+                val pkg = event.packageName
+                val timestamp = event.timeStamp
+
+                // Unlock count (Event type 17: KEYGUARD_DISMISSED)
+                if (type == 17) {
                     unlockCount++
-                } else if (type == 1 || type == UsageEvents.Event.ACTIVITY_RESUMED) {
-                    val pkg = event.packageName
-                    if (!isSystemUI(pkg)) {
-                        if (currentPackage != null && currentPackage != pkg) {
-                            appSwitchCount++
+                }
+
+                // Screen turned off (Event type 16: SCREEN_NON_INTERACTIVE)
+                if (type == 16) {
+                    if (activeApp != null && activeAppStartMs > 0L) {
+                        val duration = timestamp - activeAppStartMs
+                        if (duration in 100..(1000L * 60 * 60 * 6)) {
+                            totalForegroundMs += duration
+                            val evCal = Calendar.getInstance().apply { timeInMillis = timestamp }
+                            val hr = evCal.get(Calendar.HOUR_OF_DAY)
+                            if (hr >= 23 || hr < 6) nightForegroundMs += duration
                         }
-                        if (currentStartTime > 0L) {
-                            val duration = event.timeStamp - currentStartTime
-                            if (duration in 1..(1000L * 60 * 60 * 6)) {
+                    }
+                    activeApp = null
+                    activeAppStartMs = 0L
+                } else if (type == 1 || type == UsageEvents.Event.ACTIVITY_RESUMED) {
+                    if (!isSystemUI(pkg)) {
+                        if (activeApp != null && activeAppStartMs > 0L) {
+                            val duration = timestamp - activeAppStartMs
+                            if (duration in 100..(1000L * 60 * 60 * 6)) {
                                 totalForegroundMs += duration
-                                val eventCal = Calendar.getInstance().apply { timeInMillis = event.timeStamp }
-                                val hr = eventCal.get(Calendar.HOUR_OF_DAY)
-                                if (hr >= 23 || hr < 6) {
-                                    nightForegroundMs += duration
-                                }
+                                val evCal = Calendar.getInstance().apply { timeInMillis = timestamp }
+                                val hr = evCal.get(Calendar.HOUR_OF_DAY)
+                                if (hr >= 23 || hr < 6) nightForegroundMs += duration
+                            }
+                            if (activeApp != pkg) {
+                                appSwitchCount++
                             }
                         }
-                        currentPackage = pkg
-                        currentStartTime = event.timeStamp
+                        activeApp = pkg
+                        activeAppStartMs = timestamp
                     }
                 } else if (type == 2 || type == UsageEvents.Event.ACTIVITY_PAUSED) {
-                    if (currentStartTime > 0L) {
-                        val duration = event.timeStamp - currentStartTime
-                        if (duration in 1..(1000L * 60 * 60 * 6)) {
+                    if (pkg == activeApp && activeAppStartMs > 0L) {
+                        val duration = timestamp - activeAppStartMs
+                        if (duration in 100..(1000L * 60 * 60 * 6)) {
                             totalForegroundMs += duration
-                            val eventCal = Calendar.getInstance().apply { timeInMillis = event.timeStamp }
-                            val hr = eventCal.get(Calendar.HOUR_OF_DAY)
-                            if (hr >= 23 || hr < 6) {
-                                nightForegroundMs += duration
-                            }
+                            val evCal = Calendar.getInstance().apply { timeInMillis = timestamp }
+                            val hr = evCal.get(Calendar.HOUR_OF_DAY)
+                            if (hr >= 23 || hr < 6) nightForegroundMs += duration
                         }
+                        activeApp = null
+                        activeAppStartMs = 0L
                     }
-                    currentStartTime = 0L
                 }
             }
 
-            if (currentStartTime > 0L) {
-                val duration = (endTime - currentStartTime).coerceAtLeast(0L)
-                if (duration in 1..(1000L * 60 * 60 * 6)) {
+            // Cap active interval to current time if screen currently on
+            if (activeApp != null && activeAppStartMs > 0L) {
+                val duration = (endTime - activeAppStartMs).coerceAtLeast(0L)
+                if (duration in 100..(1000L * 60 * 60 * 6)) {
                     totalForegroundMs += duration
                 }
             }
         }
 
-        // Secondary fallback filtering out launchers and system background UI
-        if (totalForegroundMs == 0L) {
-            val stats: List<UsageStats> = usageStatsManager.queryUsageStats(
-                UsageStatsManager.INTERVAL_DAILY,
-                startTime,
-                endTime
-            ) ?: emptyList()
-
-            for (usage in stats) {
-                val pkg = usage.packageName
-                if (usage.totalTimeInForeground > 0 && !isSystemUI(pkg)) {
-                    totalForegroundMs += usage.totalTimeInForeground
-                    appSwitchCount++
+        // Fallback for unlock count if KEYGUARD_DISMISSED is unsupported
+        if (unlockCount == 0 && usageEvents != null) {
+            val events2 = usageStatsManager.queryEvents(startTime, endTime)
+            if (events2 != null) {
+                val ev = UsageEvents.Event()
+                var wasScreenOff = false
+                while (events2.hasNextEvent()) {
+                    events2.getNextEvent(ev)
+                    if (ev.eventType == 16) {
+                        wasScreenOff = true
+                    } else if (ev.eventType == 15 && wasScreenOff) {
+                        unlockCount++
+                        wasScreenOff = false
+                    }
                 }
             }
         }
@@ -164,10 +189,17 @@ class DeviceUsageCollector(
     }
 
     private fun isSystemUI(packageName: String): Boolean {
-        return packageName.contains("systemui") ||
-                packageName == "android" ||
-                packageName.contains("launcher") ||
-                packageName.contains("home") ||
-                packageName.contains("system")
+        val lower = packageName.lowercase()
+        return lower == defaultLauncherPackage?.lowercase() ||
+                lower.contains("systemui") ||
+                lower == "android" ||
+                lower.contains("launcher") ||
+                lower.contains("miui.home") ||
+                lower.contains("miui.touchassistant") ||
+                lower.contains("miui.guardprovider") ||
+                lower.contains("miui.securitycenter") ||
+                lower.contains("sec.android.app.launcher") ||
+                lower.contains("nexuslauncher")
     }
 }
+
