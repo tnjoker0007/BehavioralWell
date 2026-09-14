@@ -21,8 +21,28 @@ from app.schemas.dto import UserCreate
 from app.services.simulation_service import SimulationService
 from app.api.telemetry_routes import ingest_single_telemetry
 
-# Create database tables
+from sqlalchemy import text
+
+# Create database tables & auto-migrate schema
 Base.metadata.create_all(bind=engine)
+
+def auto_migrate_db():
+    try:
+        db = SessionLocal()
+        result = db.execute(text("PRAGMA table_info(behavioral_telemetry)")).fetchall()
+        cols = [r[1] for r in result]
+        if "device_id" not in cols:
+            print("[DB MIGRATION] Adding missing 'device_id' column to behavioral_telemetry table...")
+            db.execute(text("ALTER TABLE behavioral_telemetry ADD COLUMN device_id VARCHAR"))
+            db.commit()
+    except Exception as e:
+        print(f"[DB MIGRATION NOTICE] {e}")
+    finally:
+        db.close()
+
+auto_migrate_db()
+
+
 
 app = FastAPI(
     title="BehavioralWell — Web + Android Shared Platform",

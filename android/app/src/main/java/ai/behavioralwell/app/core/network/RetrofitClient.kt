@@ -35,9 +35,22 @@ object RetrofitClient {
 
     }
 
+    private val networkTracingInterceptor = okhttp3.Interceptor { chain ->
+        val request = chain.request()
+        if (BuildConfig.DEBUG) {
+            Log.d("BEHAVIORALWELL_NETWORK", "[BEHAVIORALWELL NETWORK] baseUrl=${ApiConfig.baseUrl} fullUrl=${request.url} method=${request.method}")
+        }
+        val response = chain.proceed(request)
+        if (BuildConfig.DEBUG) {
+            Log.d("BEHAVIORALWELL_NETWORK", "[BEHAVIORALWELL NETWORK RESPONSE] url=${request.url} status=${response.code}")
+        }
+        response
+    }
+
     val okHttpClient: OkHttpClient by lazy {
         val app = BehavioralWellApplication.instance
         OkHttpClient.Builder()
+            .addInterceptor(networkTracingInterceptor)
             .addInterceptor(AuthInterceptor(app.tokenStorage))
             .addInterceptor(loggingInterceptor)
             .connectTimeout(15, TimeUnit.SECONDS)

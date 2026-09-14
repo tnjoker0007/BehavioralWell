@@ -105,6 +105,10 @@ fun SensorStatusDiagnosticsScreen(
         ) {
             if (BuildConfig.DEBUG) {
                 item {
+                    NetworkDiagnosticsCard(context = context)
+                }
+
+                item {
                     DevLiveTelemetryControlCard(
                         isStreaming = isLiveStreaming,
                         targetUrl = "${ApiConfig.baseUrl}dev/telemetry",
@@ -414,5 +418,39 @@ fun SensorStatusCard(
         }
     }
 }
+
+@Composable
+fun NetworkDiagnosticsCard(context: android.content.Context) {
+    val deviceId = remember { ai.behavioralwell.app.core.device.DeviceIdManager.getDeviceId(context) }
+    val deviceModel = remember { ai.behavioralwell.app.core.device.DeviceIdManager.getDeviceModel() }
+    val androidVer = remember { ai.behavioralwell.app.core.device.DeviceIdManager.getAndroidVersion() }
+
+    BehavioralWellGlassCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = "⚡ USB NETWORK DIAGNOSTICS",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    color = PrimaryCyan,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp
+                )
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            TelemetryValueRow("Backend URL", ApiConfig.baseUrl)
+            TelemetryValueRow("Target Route", "127.0.0.1:8000 -> ADB Reverse -> PC")
+            TelemetryValueRow("App Device ID", deviceId.take(18) + "...")
+            TelemetryValueRow("Hardware Model", deviceModel)
+            TelemetryValueRow("OS Version", androidVer)
+
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = "Connect USB and ensure 'scripts/start_behavioralwell_usb.ps1' host bridge watcher is active.",
+                style = MaterialTheme.typography.bodySmall.copy(color = TextMuted, fontSize = 10.sp)
+            )
+        }
+    }
+}
+
 
 
