@@ -15,7 +15,7 @@ def run_health_check():
     
     # 1. FastAPI Server Check
     try:
-        req = urllib.request.urlopen("http://127.0.0.1:8000/api/telemetry/status", timeout=3)
+        req = urllib.request.urlopen("http://127.0.0.1:8000/", timeout=3)
         if req.status == 200:
             results["FastAPI Server"] = ("PASS", "Running on http://127.0.0.1:8000 (200 OK)")
         else:

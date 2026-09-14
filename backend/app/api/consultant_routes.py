@@ -5,10 +5,15 @@ from app.database import get_db
 from app.models.domain import User, RiskAssessment, SelfReport, InterventionSession, BehavioralTelemetry, UserBaseline
 from app.services.llm_interpreter import LLMInterpreter
 
+from app.api.auth_routes import get_current_user_obj
+
 router = APIRouter(prefix="/consultant", tags=["Consultant Dashboard"])
 
 @router.get("/patients")
-def get_consultant_patients(db: Session = Depends(get_db)):
+def get_consultant_patients(current_user: User = Depends(get_current_user_obj), db: Session = Depends(get_db)):
+    if current_user.role not in ["admin", "consultant"]:
+        raise HTTPException(status_code=403, detail="Forbidden: Consultant or Admin access required")
+
     users = db.query(User).all()
     patient_list = []
 
@@ -61,7 +66,9 @@ def get_consultant_patients(db: Session = Depends(get_db)):
     return patient_list
 
 @router.get("/user-activity/{user_id}")
-def get_user_activity_details(user_id: str, db: Session = Depends(get_db)):
+def get_user_activity_details(user_id: str, current_user: User = Depends(get_current_user_obj), db: Session = Depends(get_db)):
+    if current_user.role not in ["admin", "consultant"]:
+        raise HTTPException(status_code=403, detail="Forbidden: Consultant or Admin access required")
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")

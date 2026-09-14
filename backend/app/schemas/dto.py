@@ -77,6 +77,7 @@ class DeviceRegistrationResponse(BaseModel):
 class TelemetryInput(BaseModel):
     idempotency_key: Optional[str] = None
     deviceId: Optional[str] = None
+    device_id: Optional[str] = None
     timestamp: Optional[datetime] = None
     
     typing_speed: Optional[float] = None
@@ -85,13 +86,20 @@ class TelemetryInput(BaseModel):
     correction_rate: Optional[float] = None
 
     screen_time: Optional[float] = None
+    screenTime: Optional[float] = None
     unlock_count: Optional[int] = None
+    unlockCount: Optional[int] = None
     night_usage: Optional[float] = None
+    nightUsage: Optional[float] = None
     app_switch_frequency: Optional[float] = None
+    appSwitchFrequency: Optional[float] = None
 
     movement_intensity: Optional[float] = None
+    movementIntensity: Optional[float] = None
     acceleration_variance: Optional[float] = None
+    accelerationVariance: Optional[float] = None
     stationary_duration: Optional[float] = None
+    stationaryDuration: Optional[float] = None
 
     task_accuracy: Optional[float] = None
     task_completion_time: Optional[float] = None

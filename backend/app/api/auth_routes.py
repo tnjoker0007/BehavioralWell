@@ -62,34 +62,37 @@ def refresh_token(req: TokenRefreshRequest, db: Session = Depends(get_db)):
         user=user_resp
     )
 
-def get_current_user_id(authorization: str = Header(None), db: Session = Depends(get_db)) -> str:
-    if authorization and authorization.startswith("Bearer "):
-        token = authorization.split(" ")[1]
-        payload = AuthService.decode_token(token)
-        if payload and payload.get("type") == "access" and payload.get("sub"):
-            user = db.query(User).filter(User.id == payload.get("sub")).first()
-            if user:
-                return user.id
+def get_current_user_obj(authorization: str = Header(None), db: Session = Depends(get_db)) -> User:
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Authentication credentials were not provided")
+    
+    token = authorization.split(" ")[1] if " " in authorization else ""
+    payload = AuthService.decode_token(token)
+    if not payload or payload.get("type") != "access" or not payload.get("sub"):
+        raise HTTPException(status_code=401, detail="Invalid or expired authentication token")
 
-    # Fallback to single demo user ID for web/unauthenticated evaluation
-    demo_user = db.query(User).filter(User.email == "demo@behavioralwell.ai").first()
-    if demo_user:
-        return demo_user.id
-    return "usr_demo12345"
+    user = db.query(User).filter(User.id == payload.get("sub")).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="User associated with token not found")
+
+    return user
+
+def get_current_user_id(user: User = Depends(get_current_user_obj)) -> str:
+    return user.id
 
 @router.get("/me", response_model=UserResponse)
-def get_current_user(user_id: str = Depends(get_current_user_id), db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return UserResponse.from_orm(user)
+def get_current_user(current_user: User = Depends(get_current_user_obj)):
+    return UserResponse.from_orm(current_user)
 
 @router.post("/logout")
 def logout():
     return {"message": "Successfully logged out. Client should discard tokens."}
 
 @router.delete("/users/{user_id}/data")
-def delete_data(user_id: str, db: Session = Depends(get_db)):
+def delete_data(user_id: str, current_user: User = Depends(get_current_user_obj), db: Session = Depends(get_db)):
+    if current_user.id != user_id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Forbidden: You are not authorized to delete another user's data")
+        
     success = AuthService.delete_user_data(db, user_id)
     if not success:
         raise HTTPException(status_code=404, detail="User not found")

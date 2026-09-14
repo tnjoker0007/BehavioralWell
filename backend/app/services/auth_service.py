@@ -8,8 +8,28 @@ from app.models.domain import User, Consent
 from app.schemas.dto import UserCreate, UserLogin, TokenRefreshRequest
 from app.config import settings
 
-def hash_password(password: str) -> str:
-    return hashlib.sha256(password.encode()).hexdigest()
+import secrets
+
+def hash_password(password: str, salt: Optional[str] = None) -> str:
+    if not salt:
+        salt = secrets.token_hex(16)
+    key = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt.encode('utf-8'), 100000)
+    return f"pbkdf2_sha256$100000${salt}${key.hex()}"
+
+def verify_password(password: str, hashed_password: str) -> bool:
+    if not hashed_password:
+        return False
+    if hashed_password.startswith("pbkdf2_sha256$"):
+        try:
+            parts = hashed_password.split("$")
+            if len(parts) == 4:
+                salt = parts[2]
+                return hash_password(password, salt=salt) == hashed_password
+        except Exception:
+            return False
+    # Legacy SHA-256 fallback check for existing seeded accounts
+    legacy_hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
+    return hashed_password == legacy_hash
 
 class AuthService:
     @staticmethod
@@ -66,8 +86,14 @@ class AuthService:
     @staticmethod
     def authenticate_user(db: Session, user_in: UserLogin) -> User:
         user = db.query(User).filter(User.email == user_in.email).first()
-        if not user or user.hashed_password != hash_password(user_in.password):
+        if not user:
             return None
+        if not verify_password(user_in.password, user.hashed_password):
+            return None
+        # Auto-upgrade legacy SHA-256 hash to salted PBKDF2
+        if not user.hashed_password.startswith("pbkdf2_sha256$"):
+            user.hashed_password = hash_password(user_in.password)
+            db.commit()
         return user
 
     @staticmethod

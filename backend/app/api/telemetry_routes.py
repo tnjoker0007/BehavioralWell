@@ -161,34 +161,43 @@ def get_latest_telemetry_raw(user_id: str = Depends(get_current_user_id), db: Se
 def process_telemetry_payload(user_id: str, telemetry_in: TelemetryInput, db: Session) -> RiskAssessmentResponse:
     consent = ConsentService.get_consent(db, user_id)
     
+    # Idempotency deduplication check
+    if telemetry_in.idempotency_key:
+        existing_telemetry = db.query(BehavioralTelemetry).filter(
+            BehavioralTelemetry.user_id == user_id
+        ).order_by(BehavioralTelemetry.id.desc()).limit(200).all()
+        for r in existing_telemetry:
+            if r.raw_features_json and isinstance(r.raw_features_json, dict) and r.raw_features_json.get("idempotency_key") == telemetry_in.idempotency_key:
+                # Return latest assessment for duplicate request
+                latest = db.query(RiskAssessment).filter(RiskAssessment.user_id == user_id).order_by(RiskAssessment.timestamp.desc()).first()
+                if latest:
+                    return RiskAssessmentResponse(
+                        risk_score=latest.risk_score,
+                        stage=latest.stage,
+                        stage_label=latest.stage_label,
+                        confidence=latest.confidence,
+                        trend=latest.trend,
+                        persistence_days=latest.persistence_days,
+                        top_contributors=latest.top_contributors or [],
+                        modality_scores=latest.modality_scores or {},
+                        timestamp=latest.timestamp
+                    )
+
     # 1. Filter raw features with privacy consent rules
     sanitized_features = FeatureEngine.sanitize_and_filter_telemetry(telemetry_in, consent)
     raw_meta = {}
     if telemetry_in.idempotency_key:
         raw_meta["idempotency_key"] = telemetry_in.idempotency_key
 
-    # 2. Store sanitized telemetry record
-    telemetry_record = BehavioralTelemetry(
-        user_id=user_id,
-        timestamp=telemetry_in.timestamp or datetime.utcnow(),
-        raw_features_json=raw_meta,
-        **sanitized_features
-    )
-    db.add(telemetry_record)
-    db.commit()
-
-    # 3. Update personal baseline
-    BaselineEngine.recalculate_user_baseline(db, user_id)
+    # 2. Get baseline status & compute Z-scores relative to PRIOR baseline BEFORE inserting current event (prevents self-contamination)
     samples_count = db.query(BehavioralTelemetry).filter(BehavioralTelemetry.user_id == user_id).count()
     baseline_status, _ = BaselineEngine.get_baseline_status_and_confidence(samples_count)
-
-    # 4. Compute Z-scores relative to personal baseline
     z_scores = BaselineEngine.compute_feature_z_scores(db, user_id, sanitized_features)
 
-    # 5. Evaluate temporal persistence (3-7 day trend)
+    # 3. Evaluate temporal persistence (3-7 day trend)
     persistence_days, trend, slope, rolling_3d, rolling_7d = TemporalEngine.evaluate_persistence(db, user_id, z_scores)
 
-    # 6. Evaluate Risk Score & Stage using Hybrid ML Engine
+    # 4. Evaluate Risk Score & Stage using Hybrid ML Engine
     consent_flags = {
         "keyboard_enabled": consent.keyboard_enabled,
         "usage_enabled": consent.usage_enabled,
@@ -200,9 +209,23 @@ def process_telemetry_payload(user_id: str, telemetry_in: TelemetryInput, db: Se
         z_scores, persistence_days, consent_flags, baseline_status, samples_count
     )
 
-    # 7. Generate explainability attribution
+    # 5. Generate explainability attribution
     top_contributors = ExplainabilityEngine.generate_explanations(z_scores, sanitized_features)
     contributors_dict = [c.dict() for c in top_contributors]
+
+    # 6. Store sanitized telemetry record with device_id populated
+    telemetry_record = BehavioralTelemetry(
+        user_id=user_id,
+        device_id=telemetry_in.deviceId or telemetry_in.device_id,
+        timestamp=telemetry_in.timestamp or datetime.utcnow(),
+        raw_features_json=raw_meta,
+        **sanitized_features
+    )
+    db.add(telemetry_record)
+    db.commit()
+
+    # 7. Recalculate personal baseline AFTER scoring (for future events)
+    BaselineEngine.recalculate_user_baseline(db, user_id)
 
     # 8. Save Risk Assessment Record
     assessment = RiskAssessment(

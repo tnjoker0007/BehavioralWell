@@ -5,10 +5,21 @@ load_dotenv()
 class Settings:
     PROJECT_NAME: str = "BehavioralWell — AI Multimodal Behavioral Risk Engine"
     API_V1_STR: str = "/api/v1"
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./behavioral_well.db")
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "behavioral_well_super_secret_key_2026")
+    
+    # Secret Key Handling with Environment Validation
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "behavioral_well_dev_secret_key_2026_change_in_production")
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7 # 7 days
+
+    # CORS Configured Origins (No wildcard origins when credentials allowed)
+    CORS_ORIGINS: list = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000"
+    ]
 
     # Baseline configuration
     DEFAULT_BASELINE_DAYS: int = 14
@@ -25,4 +36,8 @@ class Settings:
     SITE_NAME: str = os.getenv("SITE_NAME", "BehavioralWell")
 
 settings = Settings()
+
+if settings.ENVIRONMENT == "production" and not os.getenv("SECRET_KEY"):
+    raise RuntimeError("CRITICAL SECURITY RISK: SECRET_KEY environment variable MUST be explicitly set in production mode!")
+
 

@@ -89,7 +89,7 @@ def get_risk_interpretation(user_id: str = Depends(get_current_user_id), db: Ses
     }
 
 @router.get("/explanation")
-def get_risk_explanation(user_id: str = "usr_demo12345", db: Session = Depends(get_db)):
+def get_risk_explanation(user_id: str = Depends(get_current_user_id), db: Session = Depends(get_db)):
     assessment = get_current_risk(user_id=user_id, db=db)
     return {
         "score": assessment.risk_score,

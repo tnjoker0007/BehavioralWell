@@ -50,10 +50,10 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS setup
+# CORS setup with configured trusted origins (no wildcard origins when credentials allowed)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -153,14 +153,14 @@ def seed_demo_data():
             for _ in range(7):
                 ingest_single_telemetry(stress_telemetry, jordan_user.id, db)
 
-        # 5. Sample Patient: Taylor Swift (Recovery Pattern)
-        taylor_user = db.query(User).filter(User.email == "taylor.swift@behavioralwell.ai").first()
+        # 5. Sample Patient: Taylor Morgan (Recovery Pattern - Fictional Persona)
+        taylor_user = db.query(User).filter(User.email == "taylor.morgan@behavioralwell.ai").first()
         if not taylor_user:
             taylor_user = AuthService.create_user(
                 db,
                 UserCreate(
-                    name="Taylor Swift",
-                    email="taylor.swift@behavioralwell.ai",
+                    name="Taylor Morgan",
+                    email="taylor.morgan@behavioralwell.ai",
                     password="Password123!",
                     role="user",
                     age_group="25-34",
