@@ -96,7 +96,7 @@ class RiskAssessment(Base):
     risk_score = Column(Float, nullable=False)           # 0 - 100
     stage = Column(Integer, nullable=False)              # 0 to 4
     stage_label = Column(String, nullable=False)         # Stable, Early, Persistent, Elevated, High Concern
-    confidence = Column(Float, default=0.85)
+    confidence = Column(Float, default=85.0)
     trend = Column(String, default="stable")             # increasing, decreasing, stable
     persistence_days = Column(Integer, default=1)
     

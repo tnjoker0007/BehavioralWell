@@ -20,7 +20,7 @@ export default function UserDashboardView({
     stage_label = "Stage 0 — Stable",
     trend = "stable",
     persistence_days = 1,
-    confidence = 0.92,
+    confidence = 92,
     modality_scores = {},
     top_contributors = []
   } = riskData || {};

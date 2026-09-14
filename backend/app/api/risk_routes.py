@@ -23,7 +23,7 @@ def get_current_risk(user_id: str = Depends(get_current_user_id), db: Session = 
             risk_score=15.0,
             stage=0,
             stage_label="Stage 0 — Stable",
-            confidence=0.95,
+            confidence=95.0,
             trend="stable",
             persistence_days=1,
             top_contributors=[],

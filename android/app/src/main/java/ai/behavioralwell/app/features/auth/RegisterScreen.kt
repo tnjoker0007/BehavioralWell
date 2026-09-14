@@ -83,60 +83,30 @@ fun RegisterScreen(
                     modifier = Modifier.padding(top = 4.dp, bottom = 24.dp)
                 )
 
-                OutlinedTextField(
+                NeomorphicTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Full Name", color = TextMuted) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = PrimaryCyan,
-                        unfocusedBorderColor = GlassBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        focusedContainerColor = DarkBg.copy(alpha = 0.5f),
-                        unfocusedContainerColor = DarkBg.copy(alpha = 0.3f)
-                    )
+                    label = "Full Name",
+                    modifier = Modifier.fillMaxWidth()
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                OutlinedTextField(
+                NeomorphicTextField(
                     value = email,
                     onValueChange = { email = it },
-                    label = { Text("Email Address", color = TextMuted) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = PrimaryCyan,
-                        unfocusedBorderColor = GlassBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        focusedContainerColor = DarkBg.copy(alpha = 0.5f),
-                        unfocusedContainerColor = DarkBg.copy(alpha = 0.3f)
-                    )
+                    label = "Email Address",
+                    modifier = Modifier.fillMaxWidth()
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                OutlinedTextField(
+                NeomorphicTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = { Text("Password", color = TextMuted) },
-                    singleLine = true,
+                    label = "Password",
                     visualTransformation = PasswordVisualTransformation(),
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = PrimaryCyan,
-                        unfocusedBorderColor = GlassBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        focusedContainerColor = DarkBg.copy(alpha = 0.5f),
-                        unfocusedContainerColor = DarkBg.copy(alpha = 0.3f)
-                    )
+                    modifier = Modifier.fillMaxWidth()
                 )
 
                 if (uiState is AuthUiState.Error) {

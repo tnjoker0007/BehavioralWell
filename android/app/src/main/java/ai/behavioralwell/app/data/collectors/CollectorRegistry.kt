@@ -59,9 +59,12 @@ object CollectorRegistry {
 
     /**
      * Reads current derived feature snapshots directly from single shared collector instances.
-     * Zero second SensorManager registration, zero raw sensor array leakage.
+     * Injects canonical snapshotId, timestamp, and REAL_DEVICE provenance metadata.
      */
     fun collectDerivedSnapshot(context: Context): Map<String, Any> {
+        val snapshotId = "telemetry-${System.currentTimeMillis()}"
+        val timestamp = dateFormat.format(Date())
+
         val motion = getMotionCollector(context).currentSnapshot()
         val usage = getUsageCollector(context).currentSnapshot()
         val keyboard = getKeyboardCollector(context).currentSnapshot()
@@ -69,7 +72,10 @@ object CollectorRegistry {
         val activity = getActivityCollector(context).currentSnapshot()
 
         val payload = mutableMapOf<String, Any>()
-        payload["timestamp"] = dateFormat.format(Date())
+        payload["snapshotId"] = snapshotId
+        payload["timestamp"] = timestamp
+        payload["source"] = "REAL_DEVICE"
+        payload["provenance"] = "REAL_DEVICE"
 
         if (motion != null) payload["motion"] = motion
         if (usage != null) payload["usage"] = usage
@@ -79,7 +85,7 @@ object CollectorRegistry {
 
         Log.d(
             "COLLECTOR_SNAPSHOT",
-            "[COLLECTOR SNAPSHOT] motion=${motion?.get("status") ?: "AVAILABLE"} " +
+            "[COLLECTOR SNAPSHOT] snapshotId=$snapshotId motion=${motion?.get("isStationary") ?: "N/A"} " +
                     "usage=${usage?.get("status") ?: "UNAVAILABLE"} " +
                     "keyboard=${keyboard?.get("status") ?: "UNAVAILABLE"} " +
                     "activity=${activity?.get("status") ?: "UNAVAILABLE"} " +

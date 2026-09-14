@@ -20,7 +20,8 @@ class LLMInterpreter:
 
         stage_label = assessment.get("stage_label", "Stage 0 — Stable")
         risk_score = assessment.get("risk_score", 0.0)
-        confidence = assessment.get("confidence", 50.0)
+        raw_conf = float(assessment.get("confidence", 85.0))
+        confidence = min(100.0, max(0.0, round(raw_conf * 100.0 if raw_conf <= 1.0 else raw_conf, 1)))
         trend = assessment.get("trend", "stable")
         persistence_days = assessment.get("persistence_days", 0)
 

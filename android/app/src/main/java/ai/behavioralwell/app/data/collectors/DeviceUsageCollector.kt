@@ -80,6 +80,7 @@ class DeviceUsageCollector(
         var appSwitchCount = 0
         var totalForegroundMs = 0L
         var nightForegroundMs = 0L
+        var isScreenOff = true
 
         val usageEvents = try {
             usageStatsManager.queryEvents(startTime, endTime)
@@ -98,18 +99,30 @@ class DeviceUsageCollector(
                 val pkg = event.packageName
                 val timestamp = event.timeStamp
 
-                // Unlock count (Event type 17: KEYGUARD_DISMISSED)
-                if (type == 17) {
-                    unlockCount++
+                // Unlock count tracking: KEYGUARD_DISMISSED (17), KEYGUARD_GOING_AWAY (18), or SCREEN_INTERACTIVE (15) after SCREEN_NON_INTERACTIVE (16)
+                if (type == 17 || type == 18) {
+                    if (isScreenOff) {
+                        unlockCount++
+                        isScreenOff = false
+                    }
+                } else if (type == 15) { // SCREEN_INTERACTIVE
+                    if (isScreenOff) {
+                        unlockCount++
+                        isScreenOff = false
+                    }
+                } else if (type == 16) { // SCREEN_NON_INTERACTIVE
+                    isScreenOff = true
                 }
 
                 // Screen turned off (Event type 16: SCREEN_NON_INTERACTIVE)
                 if (type == 16) {
                     if (activeApp != null && activeAppStartMs > 0L) {
-                        val duration = timestamp - activeAppStartMs
+                        val sessionStart = maxOf(activeAppStartMs, startTime)
+                        val sessionEnd = minOf(timestamp, endTime)
+                        val duration = sessionEnd - sessionStart
                         if (duration in 100..(1000L * 60 * 60 * 6)) {
                             totalForegroundMs += duration
-                            val evCal = Calendar.getInstance().apply { timeInMillis = timestamp }
+                            val evCal = Calendar.getInstance().apply { timeInMillis = sessionEnd }
                             val hr = evCal.get(Calendar.HOUR_OF_DAY)
                             if (hr >= 23 || hr < 6) nightForegroundMs += duration
                         }
@@ -119,10 +132,12 @@ class DeviceUsageCollector(
                 } else if (type == 1 || type == UsageEvents.Event.ACTIVITY_RESUMED) {
                     if (!isSystemUI(pkg)) {
                         if (activeApp != null && activeAppStartMs > 0L) {
-                            val duration = timestamp - activeAppStartMs
+                            val sessionStart = maxOf(activeAppStartMs, startTime)
+                            val sessionEnd = minOf(timestamp, endTime)
+                            val duration = sessionEnd - sessionStart
                             if (duration in 100..(1000L * 60 * 60 * 6)) {
                                 totalForegroundMs += duration
-                                val evCal = Calendar.getInstance().apply { timeInMillis = timestamp }
+                                val evCal = Calendar.getInstance().apply { timeInMillis = sessionEnd }
                                 val hr = evCal.get(Calendar.HOUR_OF_DAY)
                                 if (hr >= 23 || hr < 6) nightForegroundMs += duration
                             }
@@ -135,10 +150,12 @@ class DeviceUsageCollector(
                     }
                 } else if (type == 2 || type == UsageEvents.Event.ACTIVITY_PAUSED) {
                     if (pkg == activeApp && activeAppStartMs > 0L) {
-                        val duration = timestamp - activeAppStartMs
+                        val sessionStart = maxOf(activeAppStartMs, startTime)
+                        val sessionEnd = minOf(timestamp, endTime)
+                        val duration = sessionEnd - sessionStart
                         if (duration in 100..(1000L * 60 * 60 * 6)) {
                             totalForegroundMs += duration
-                            val evCal = Calendar.getInstance().apply { timeInMillis = timestamp }
+                            val evCal = Calendar.getInstance().apply { timeInMillis = sessionEnd }
                             val hr = evCal.get(Calendar.HOUR_OF_DAY)
                             if (hr >= 23 || hr < 6) nightForegroundMs += duration
                         }
@@ -149,30 +166,32 @@ class DeviceUsageCollector(
             }
 
             // Cap active interval to current time if screen currently on
-            if (activeApp != null && activeAppStartMs > 0L) {
-                val duration = (endTime - activeAppStartMs).coerceAtLeast(0L)
+            if (activeApp != null && activeAppStartMs > 0L && !isScreenOff) {
+                val sessionStart = maxOf(activeAppStartMs, startTime)
+                val sessionEnd = minOf(endTime, System.currentTimeMillis())
+                val duration = (sessionEnd - sessionStart).coerceAtLeast(0L)
                 if (duration in 100..(1000L * 60 * 60 * 6)) {
                     totalForegroundMs += duration
                 }
             }
         }
 
-        // Fallback for unlock count if KEYGUARD_DISMISSED is unsupported
-        if (unlockCount == 0 && usageEvents != null) {
-            val events2 = usageStatsManager.queryEvents(startTime, endTime)
-            if (events2 != null) {
-                val ev = UsageEvents.Event()
-                var wasScreenOff = false
-                while (events2.hasNextEvent()) {
-                    events2.getNextEvent(ev)
-                    if (ev.eventType == 16) {
-                        wasScreenOff = true
-                    } else if (ev.eventType == 15 && wasScreenOff) {
-                        unlockCount++
-                        wasScreenOff = false
+        // Reconcile with queryUsageStats for exact Android Digital Wellbeing parity
+        try {
+            val statsList = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, startTime, endTime)
+            if (!statsList.isNullOrEmpty()) {
+                var statsSumMs = 0L
+                for (stats in statsList) {
+                    if (!isSystemUI(stats.packageName) && stats.totalTimeInForeground > 0) {
+                        statsSumMs += stats.totalTimeInForeground
                     }
                 }
+                if (statsSumMs in 1000L..totalForegroundMs) {
+                    totalForegroundMs = statsSumMs
+                }
             }
+        } catch (e: Exception) {
+            // Safe fallback
         }
 
         val screenTimeHours = totalForegroundMs / (1000.0f * 60.0f * 60.0f)

@@ -82,41 +82,21 @@ fun LoginScreen(
                     modifier = Modifier.padding(top = 4.dp, bottom = 24.dp)
                 )
 
-                OutlinedTextField(
+                NeomorphicTextField(
                     value = email,
                     onValueChange = { email = it },
-                    label = { Text("Email Address", color = TextSecondaryDark) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = PrimaryCyan,
-                        unfocusedBorderColor = BorderGlass,
-                        focusedTextColor = TextPrimaryDark,
-                        unfocusedTextColor = TextPrimaryDark,
-                        focusedContainerColor = Color(0x331E293B),
-                        unfocusedContainerColor = Color(0x331E293B)
-                    )
+                    label = "Email Address",
+                    modifier = Modifier.fillMaxWidth()
                 )
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                OutlinedTextField(
+                NeomorphicTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = { Text("Password", color = TextSecondaryDark) },
-                    singleLine = true,
+                    label = "Password",
                     visualTransformation = PasswordVisualTransformation(),
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = PrimaryCyan,
-                        unfocusedBorderColor = BorderGlass,
-                        focusedTextColor = TextPrimaryDark,
-                        unfocusedTextColor = TextPrimaryDark,
-                        focusedContainerColor = Color(0x331E293B),
-                        unfocusedContainerColor = Color(0x331E293B)
-                    )
+                    modifier = Modifier.fillMaxWidth()
                 )
 
                 if (uiState is AuthUiState.Error) {

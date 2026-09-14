@@ -15,7 +15,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -49,9 +48,8 @@ fun DashboardScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier
-                                .size(40.dp)
-                                .shadow(4.dp, CircleShape, ambientColor = NeoShadowDark, spotColor = NeoShadowLight)
-                                .background(NeoBg, CircleShape),
+                                .size(42.dp)
+                                .neoRaisedCircle(shadowOffset = 4.dp, blurRadius = 6.dp, backgroundColor = NeoBg),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -79,9 +77,16 @@ fun DashboardScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onNavigateToSensors) {
-                        Icon(Icons.Default.Sensors, contentDescription = "Sensors", tint = PrimaryCyan)
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .neoRaisedCircle(shadowOffset = 3.dp, blurRadius = 5.dp, backgroundColor = NeoBg)
+                            .clickable { onNavigateToSensors() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.Sensors, contentDescription = "Sensors", tint = PrimaryCyan, modifier = Modifier.size(20.dp))
                     }
+                    Spacer(modifier = Modifier.width(12.dp))
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = NeoBg)
             )
@@ -101,21 +106,17 @@ fun DashboardScreen(
         },
         floatingActionButton = {
             if (selectedTab == NavigationTab.HOME) {
-                FloatingActionButton(
-                    onClick = onOpenSelfCheckIn,
-                    containerColor = NeoBg,
-                    contentColor = PrimaryCyan,
-                    shape = CircleShape,
-                    modifier = Modifier.shadow(8.dp, CircleShape, ambientColor = NeoShadowDark, spotColor = NeoShadowLight)
+                Box(
+                    modifier = Modifier
+                        .width(170.dp)
+                        .padding(bottom = 12.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Default.Mood, contentDescription = null, tint = PrimaryCyan)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Self Check-in", fontWeight = FontWeight.ExtraBold, color = PrimaryCyan)
-                    }
+                    TactileNeoButton(
+                        text = "Self Check-in",
+                        icon = Icons.Default.Mood,
+                        onClick = onOpenSelfCheckIn,
+                        cornerRadius = 24.dp
+                    )
                 }
             }
         },
@@ -210,7 +211,7 @@ fun DashboardHomeContent(
     ) {
         item { Spacer(modifier = Modifier.height(4.dp)) }
 
-        // Contextual Greeting
+        // Contextual Greeting on Open Lavender Space
         item {
             Column {
                 Text(
@@ -228,9 +229,9 @@ fun DashboardHomeContent(
             }
         }
 
-        // Hero Risk Gauge Card (Borderless Molded Neomorphism)
+        // Hero Risk Gauge Card (Borderless 3D Neomorphism)
         item {
-            BehavioralWellGlassCard {
+            NeoRaisedSurface {
                 Text(
                     text = "BEHAVIORAL RISK ASSESSMENT",
                     style = MaterialTheme.typography.labelSmall.copy(
@@ -248,7 +249,7 @@ fun DashboardHomeContent(
                     confidence = risk.confidence
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
                     text = supportiveText,
@@ -262,9 +263,9 @@ fun DashboardHomeContent(
             }
         }
 
-        // 7-Day Pattern Trend Sparkline Card
+        // 7-Day Pattern Trend Sparkline Card (With Sunken Inset Container for Graph)
         item {
-            BehavioralWellGlassCard {
+            NeoRaisedSurface {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -304,31 +305,38 @@ fun DashboardHomeContent(
                     }
                 }
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(80.dp)
-                        .padding(top = 12.dp)
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Inset Sunken Graph Container
+                NeoInsetSurface(
+                    cornerRadius = 16.dp,
+                    contentPadding = PaddingValues(12.dp)
                 ) {
-                    Canvas(modifier = Modifier.fillMaxSize()) {
-                        val points = listOf(15f, 20f, 18f, 32f, 28f, 22f, risk.riskScore)
-                        val maxP = 100f
-                        val widthP = size.width
-                        val heightP = size.height
-                        val stepX = widthP / (points.size - 1)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(80.dp)
+                    ) {
+                        Canvas(modifier = Modifier.fillMaxSize()) {
+                            val points = listOf(15f, 20f, 18f, 32f, 28f, 22f, risk.riskScore)
+                            val maxP = 100f
+                            val widthP = size.width
+                            val heightP = size.height
+                            val stepX = widthP / (points.size - 1)
 
-                        val path = Path()
-                        points.forEachIndexed { i, p ->
-                            val x = i * stepX
-                            val y = heightP - (p / maxP) * heightP
-                            if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                            val path = Path()
+                            points.forEachIndexed { i, p ->
+                                val x = i * stepX
+                                val y = heightP - (p / maxP) * heightP
+                                if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                            }
+
+                            drawPath(
+                                path = path,
+                                color = PrimaryCyan,
+                                style = Stroke(width = 3.5.dp.toPx())
+                            )
                         }
-
-                        drawPath(
-                            path = path,
-                            color = PrimaryCyan,
-                            style = Stroke(width = 3.dp.toPx())
-                        )
                     }
                 }
             }
@@ -379,7 +387,7 @@ fun DashboardHomeContent(
 
         // Suggested Intervention Card
         item {
-            BehavioralWellGlassCard {
+            NeoRaisedSurface {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -389,8 +397,7 @@ fun DashboardHomeContent(
                         Box(
                             modifier = Modifier
                                 .size(44.dp)
-                                .shadow(4.dp, CircleShape, ambientColor = NeoShadowDark, spotColor = NeoShadowLight)
-                                .background(NeoBg, CircleShape),
+                                .neoRaisedCircle(shadowOffset = 3.dp, blurRadius = 5.dp, backgroundColor = NeoBg),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(Icons.Default.SelfImprovement, contentDescription = null, tint = PrimaryCyan)
@@ -408,9 +415,12 @@ fun DashboardHomeContent(
                         }
                     }
 
-                    TextButton(onClick = onNavigateToInterventions) {
-                        Text("START →", color = PrimaryCyan, fontWeight = FontWeight.ExtraBold)
-                    }
+                    TactileNeoButton(
+                        text = "START →",
+                        onClick = onNavigateToInterventions,
+                        modifier = Modifier.width(100.dp),
+                        cornerRadius = 14.dp
+                    )
                 }
             }
         }
@@ -425,23 +435,35 @@ fun ModalityTile(
     score: Float,
     modifier: Modifier = Modifier
 ) {
-    NeomorphicInsetContainer(
-        modifier = modifier
+    NeoRaisedSurface(
+        modifier = modifier,
+        cornerRadius = 20.dp,
+        shadowOffset = 5.dp,
+        blurRadius = 8.dp,
+        contentPadding = PaddingValues(16.dp)
     ) {
         Column {
             Text(
                 text = title,
                 style = MaterialTheme.typography.labelMedium.copy(color = TextSecondaryDark, fontWeight = FontWeight.ExtraBold)
             )
-            Text(
-                text = "${score.toInt()}%",
-                style = MaterialTheme.typography.titleLarge.copy(
-                    color = if (score > 25.0) Stage2PersistentDev else TextPrimaryDark,
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 22.sp
-                ),
-                modifier = Modifier.padding(top = 4.dp)
-            )
+            Spacer(modifier = Modifier.height(8.dp))
+            NeoInsetSurface(
+                cornerRadius = 12.dp,
+                shadowOffset = 3.dp,
+                blurRadius = 4.dp,
+                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
+            ) {
+                Text(
+                    text = "${score.toInt()}%",
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        color = if (score > 25.0) Stage2PersistentDev else TextPrimaryDark,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 22.sp
+                    )
+                )
+            }
         }
     }
 }
+

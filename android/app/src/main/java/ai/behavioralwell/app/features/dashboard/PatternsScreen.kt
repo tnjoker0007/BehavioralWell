@@ -104,7 +104,7 @@ fun PatternsScreen(
 
         // 2. 7-Day Trend Chart Card
         item {
-            BehavioralWellGlassCard {
+            NeoRaisedSurface {
                 Text(
                     text = "7-DAY PATTERN TREND",
                     style = MaterialTheme.typography.labelSmall.copy(
@@ -123,38 +123,44 @@ fun PatternsScreen(
                     modifier = Modifier.padding(top = 4.dp)
                 )
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(140.dp)
-                        .padding(top = 16.dp)
+                Spacer(modifier = Modifier.height(12.dp))
+
+                NeoInsetSurface(
+                    cornerRadius = 16.dp,
+                    contentPadding = PaddingValues(12.dp)
                 ) {
-                    Canvas(modifier = Modifier.fillMaxSize()) {
-                        val points = listOf(15f, 18f, 22f, 35f, 42f, 38f, 28f)
-                        val maxP = 100f
-                        val widthP = size.width
-                        val heightP = size.height
-                        val stepX = widthP / (points.size - 1)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(120.dp)
+                    ) {
+                        Canvas(modifier = Modifier.fillMaxSize()) {
+                            val points = listOf(15f, 18f, 22f, 35f, 42f, 38f, 28f)
+                            val maxP = 100f
+                            val widthP = size.width
+                            val heightP = size.height
+                            val stepX = widthP / (points.size - 1)
 
-                        val path = Path()
-                        points.forEachIndexed { i, p ->
-                            val x = i * stepX
-                            val y = heightP - (p / maxP) * heightP
-                            if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                            val path = Path()
+                            points.forEachIndexed { i, p ->
+                                val x = i * stepX
+                                val y = heightP - (p / maxP) * heightP
+                                if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                            }
+
+                            drawPath(
+                                path = path,
+                                color = PrimaryCyan,
+                                style = Stroke(width = 3.5.dp.toPx())
+                            )
                         }
-
-                        drawPath(
-                            path = path,
-                            color = PrimaryCyan,
-                            style = Stroke(width = 3.dp.toPx())
-                        )
                     }
                 }
 
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 8.dp),
+                        .padding(top = 10.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun").forEach { day ->

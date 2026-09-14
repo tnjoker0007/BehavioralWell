@@ -16,21 +16,32 @@ _subscribers_lock = asyncio.Lock()
 
 def _check_dev_guard():
     # Allow dev endpoints in development environment
-    pass
-
-@router.post("/dev/telemetry")
+    pass@router.post("/dev/telemetry")
 async def ingest_dev_telemetry(payload: Dict[str, Any]):
     """DEV-ONLY route to receive real-time derived telemetry snapshots from Android."""
     _check_dev_guard()
     global _latest_dev_telemetry
 
     timestamp = payload.get("timestamp", datetime.utcnow().isoformat())
+    received_at = datetime.utcnow().isoformat()
+    snapshot_id = payload.get("snapshotId", f"telemetry-{int(datetime.utcnow().timestamp() * 1000)}")
     user_id = payload.get("user_id", "dev_user")
+    source = payload.get("source", "REAL_DEVICE")
+
+    payload["snapshotId"] = snapshot_id
+    payload["timestamp"] = timestamp
+    payload["capturedAt"] = timestamp
+    payload["receivedAt"] = received_at
+    payload["source"] = source
+    payload["provenance"] = source
     
     modalities = [k for k in payload.keys() if k in ["motion", "usage", "keyboard", "activity", "mobility"]]
+    usage_data = payload.get("usage", {})
+    st = usage_data.get("screenTime")
+    uc = usage_data.get("unlockCount")
     
     # Safe diagnostic logging ONLY — No tokens, passwords, raw sensors, or GPS logged
-    print(f"[DEV TELEMETRY] received user={user_id} timestamp={timestamp} modalities={','.join(modalities)}")
+    print(f"[BACKEND RECEIVED] snapshotId={snapshot_id} capturedAt={timestamp} receivedAt={received_at} source={source} screenTime={st} unlockCount={uc} modalities={','.join(modalities)}")
 
     _latest_dev_telemetry = payload
 
@@ -42,7 +53,7 @@ async def ingest_dev_telemetry(payload: Dict[str, Any]):
             except Exception:
                 pass
 
-    return {"status": "received", "timestamp": timestamp}
+    return {"status": "received", "snapshotId": snapshot_id, "timestamp": timestamp}
 
 @router.get("/dev/telemetry/current")
 async def get_current_dev_telemetry():
@@ -227,7 +238,7 @@ async def dev_telemetry_dashboard_page():
             color: var(--text-muted);
             font-weight: 600;
             margin-left: auto;
-        }
+        }     }
 
         .grid {
             display: grid;
@@ -339,7 +350,9 @@ async def dev_telemetry_dashboard_page():
             🌐 MAIN WEBSITE PORTAL (PORT 3000) ↗
         </a>
         <div class="meta-info">
-            Stream Last Update: <span id="lastStreamUpdate">Never</span> | Phone Telemetry: <span id="lastPhoneTime">N/A</span>
+            Source: <span id="telemetrySource" style="color: #10B981; font-weight: 800;">REAL DEVICE</span> | 
+            Snapshot ID: <span id="snapshotId" style="font-family: monospace; color: #7C3AED; font-weight: 700;">N/A</span> | 
+            Stream: <span id="lastStreamUpdate">Never</span> | Phone: <span id="lastPhoneTime">N/A</span>
         </div>
     </div>
 
@@ -434,7 +447,7 @@ async def dev_telemetry_dashboard_page():
         <!-- MOBILITY -->
         <div class="card">
             <div class="card-header">
-                <span class="card-title">🗺️ MOBILITY</span>
+                <span class="card-title">MAP MOBILITY</span>
                 <span id="mobilityChanged" class="changed-ago">Waiting...</span>
             </div>
             <div class="metric-row">
@@ -516,6 +529,12 @@ async def dev_telemetry_dashboard_page():
             if (data.timestamp) {
                 document.getElementById('lastPhoneTime').innerText = data.timestamp.split('T')[1] || data.timestamp;
             }
+            if (data.snapshotId) {
+                document.getElementById('snapshotId').innerText = data.snapshotId;
+            }
+            if (data.source || data.provenance) {
+                document.getElementById('telemetrySource').innerText = data.source || data.provenance;
+            }
 
             updateConnectionStatus('LIVE', 'status-live');
 
@@ -559,7 +578,8 @@ async def dev_telemetry_dashboard_page():
                     const night = data.usage.nightUsage;
                     const freq = data.usage.appSwitchFrequency;
 
-                    updateMetric('val_screenTime', screenTime !== undefined && screenTime !== null ? screenTime.toFixed(2) + ' hrs' : null, 'usageChanged', 'usage', now);
+                    const screenTimeStr = screenTime !== undefined && screenTime !== null ? Math.round(screenTime * 60) + ' min (' + screenTime.toFixed(2) + ' hrs)' : null;
+                    updateMetric('val_screenTime', screenTimeStr, 'usageChanged', 'usage', now);
                     updateMetric('val_unlockCount', unlock !== undefined && unlock !== null ? unlock : null, 'usageChanged', 'usage', now);
                     updateMetric('val_nightUsage', night !== undefined && night !== null ? night.toFixed(2) + ' hrs' : null, 'usageChanged', 'usage', now);
                     updateMetric('val_appSwitchFrequency', freq !== undefined && freq !== null ? freq.toFixed(1) + ' /hr' : null, 'usageChanged', 'usage', now);

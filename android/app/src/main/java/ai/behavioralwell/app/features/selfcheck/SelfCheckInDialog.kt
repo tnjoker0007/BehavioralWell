@@ -1,5 +1,6 @@
 package ai.behavioralwell.app.features.selfcheck
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -25,13 +26,13 @@ fun SelfCheckInDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = SurfaceSlate,
+        containerColor = NeoBg,
         title = {
             Text(
                 text = "Self Check-in",
                 style = MaterialTheme.typography.titleLarge.copy(
-                    color = PrimaryTealLight,
-                    fontWeight = FontWeight.Bold
+                    color = PrimaryCyan,
+                    fontWeight = FontWeight.ExtraBold
                 )
             )
         },
@@ -50,11 +51,11 @@ fun SelfCheckInDialog(
                         FilterChip(
                             selected = mood == item,
                             onClick = { mood = item },
-                            label = { Text(item, fontSize = 11.sp) },
+                            label = { Text(item, fontSize = 10.sp, fontWeight = FontWeight.Bold) },
                             colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = PrimaryTeal,
-                                selectedLabelColor = TextPrimaryDark,
-                                containerColor = SurfaceSlateLight,
+                                selectedContainerColor = PrimaryCyan,
+                                selectedLabelColor = NeoBg,
+                                containerColor = NeoInsetBg,
                                 labelColor = TextSecondaryDark
                             )
                         )
@@ -64,7 +65,7 @@ fun SelfCheckInDialog(
                 Column {
                     Text(
                         text = "Perceived Stress Level: ${stressLevel.toInt()} / 5",
-                        style = MaterialTheme.typography.bodyMedium.copy(color = TextPrimaryDark)
+                        style = MaterialTheme.typography.bodyMedium.copy(color = TextPrimaryDark, fontWeight = FontWeight.Bold)
                     )
                     Slider(
                         value = stressLevel,
@@ -72,38 +73,34 @@ fun SelfCheckInDialog(
                         valueRange = 1f..5f,
                         steps = 3,
                         colors = SliderDefaults.colors(
-                            thumbColor = PrimaryTealLight,
-                            activeTrackColor = PrimaryTeal
+                            thumbColor = PrimaryCyan,
+                            activeTrackColor = PrimaryCyan,
+                            inactiveTrackColor = NeoDarkShadow
                         )
                     )
                 }
 
-                OutlinedTextField(
+                NeomorphicTextField(
                     value = note,
                     onValueChange = { note = it },
-                    label = { Text("Optional Notes", color = TextSecondaryDark) },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = PrimaryTealLight,
-                        unfocusedBorderColor = BorderSlate,
-                        focusedTextColor = TextPrimaryDark,
-                        unfocusedTextColor = TextPrimaryDark
-                    )
+                    label = "Optional Notes",
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         },
         confirmButton = {
-            Button(
+            TactileNeoButton(
+                text = "Submit Check-in",
                 onClick = { onSubmit(mood, stressLevel.toInt(), note.ifBlank { null }) },
-                colors = ButtonDefaults.buttonColors(containerColor = PrimaryTeal)
-            ) {
-                Text("Submit Check-in")
-            }
+                modifier = Modifier.width(160.dp),
+                cornerRadius = 14.dp
+            )
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = TextSecondaryDark)
+                Text("Cancel", color = TextSecondaryDark, fontWeight = FontWeight.Bold)
             }
         }
     )
 }
+

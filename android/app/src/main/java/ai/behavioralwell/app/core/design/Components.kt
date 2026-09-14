@@ -4,6 +4,8 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,10 +16,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -25,29 +31,246 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+// 3D Neomorphism Light & Shadow Constants
+val NeoLightHighlight = Color(0xFFFFFFFF)
+val NeoDarkShadow = Color(0xFFB8B4D4)       // Rich soft lavender shadow
+val NeoInsetBg = Color(0xFFDFDCF0)
+
+/**
+ * Custom Modifier for 3D Neomorphic Raised Surface.
+ * Draws top-left soft white highlight and bottom-right soft dark shadow.
+ */
+fun Modifier.neoRaised(
+    cornerRadius: Dp = 20.dp,
+    shadowOffset: Dp = 6.dp,
+    blurRadius: Dp = 10.dp,
+    backgroundColor: Color = NeoBg,
+    darkShadowColor: Color = NeoDarkShadow,
+    lightShadowColor: Color = NeoLightHighlight
+): Modifier = this.drawBehind {
+    val cornerPx = cornerRadius.toPx()
+    val offsetPx = shadowOffset.toPx()
+    val blurPx = blurRadius.toPx()
+
+    drawIntoCanvas { canvas ->
+        val nativeCanvas = canvas.nativeCanvas
+
+        // 1. Bottom-Right Soft Dark Shadow
+        val darkPaint = android.graphics.Paint().apply {
+            isAntiAlias = true
+            color = darkShadowColor.toArgb()
+            maskFilter = android.graphics.BlurMaskFilter(blurPx, android.graphics.BlurMaskFilter.Blur.NORMAL)
+        }
+        nativeCanvas.drawRoundRect(
+            offsetPx,
+            offsetPx,
+            size.width + offsetPx,
+            size.height + offsetPx,
+            cornerPx,
+            cornerPx,
+            darkPaint
+        )
+
+        // 2. Top-Left Soft Light Highlight
+        val lightPaint = android.graphics.Paint().apply {
+            isAntiAlias = true
+            color = lightShadowColor.toArgb()
+            maskFilter = android.graphics.BlurMaskFilter(blurPx, android.graphics.BlurMaskFilter.Blur.NORMAL)
+        }
+        nativeCanvas.drawRoundRect(
+            -offsetPx,
+            -offsetPx,
+            size.width - offsetPx,
+            size.height - offsetPx,
+            cornerPx,
+            cornerPx,
+            lightPaint
+        )
+
+        // 3. Main Center Surface
+        val surfacePaint = android.graphics.Paint().apply {
+            isAntiAlias = true
+            color = backgroundColor.toArgb()
+        }
+        nativeCanvas.drawRoundRect(
+            0f,
+            0f,
+            size.width,
+            size.height,
+            cornerPx,
+            cornerPx,
+            surfacePaint
+        )
+    }
+}
+
+/**
+ * Custom Modifier for Circular 3D Neomorphic Surface (e.g., logo, buttons, risk gauge).
+ */
+fun Modifier.neoRaisedCircle(
+    shadowOffset: Dp = 5.dp,
+    blurRadius: Dp = 8.dp,
+    backgroundColor: Color = NeoBg,
+    darkShadowColor: Color = NeoDarkShadow,
+    lightShadowColor: Color = NeoLightHighlight
+): Modifier = this.drawBehind {
+    val offsetPx = shadowOffset.toPx()
+    val blurPx = blurRadius.toPx()
+    val radiusPx = size.minDimension / 2f
+    val cx = size.width / 2f
+    val cy = size.height / 2f
+
+    drawIntoCanvas { canvas ->
+        val nativeCanvas = canvas.nativeCanvas
+
+        // Dark Shadow
+        val darkPaint = android.graphics.Paint().apply {
+            isAntiAlias = true
+            color = darkShadowColor.toArgb()
+            maskFilter = android.graphics.BlurMaskFilter(blurPx, android.graphics.BlurMaskFilter.Blur.NORMAL)
+        }
+        nativeCanvas.drawCircle(cx + offsetPx, cy + offsetPx, radiusPx, darkPaint)
+
+        // Light Highlight
+        val lightPaint = android.graphics.Paint().apply {
+            isAntiAlias = true
+            color = lightShadowColor.toArgb()
+            maskFilter = android.graphics.BlurMaskFilter(blurPx, android.graphics.BlurMaskFilter.Blur.NORMAL)
+        }
+        nativeCanvas.drawCircle(cx - offsetPx, cy - offsetPx, radiusPx, lightPaint)
+
+        // Center Surface
+        val surfacePaint = android.graphics.Paint().apply {
+            isAntiAlias = true
+            color = backgroundColor.toArgb()
+        }
+        nativeCanvas.drawCircle(cx, cy, radiusPx, surfacePaint)
+    }
+}
+
+/**
+ * Custom Modifier for Inset / Sunken 3D Neomorphic Surface (e.g. input fields, chart containers).
+ */
+fun Modifier.neoInset(
+    cornerRadius: Dp = 16.dp,
+    shadowOffset: Dp = 4.dp,
+    blurRadius: Dp = 6.dp,
+    backgroundColor: Color = NeoInsetBg,
+    darkShadowColor: Color = NeoDarkShadow,
+    lightShadowColor: Color = NeoLightHighlight
+): Modifier = this.drawBehind {
+    val cornerPx = cornerRadius.toPx()
+    val offsetPx = shadowOffset.toPx()
+    val blurPx = blurRadius.toPx()
+
+    drawIntoCanvas { canvas ->
+        val nativeCanvas = canvas.nativeCanvas
+
+        // Base Inset Surface
+        val bgPaint = android.graphics.Paint().apply {
+            isAntiAlias = true
+            color = backgroundColor.toArgb()
+        }
+        nativeCanvas.drawRoundRect(0f, 0f, size.width, size.height, cornerPx, cornerPx, bgPaint)
+
+        // Top-Left Inner Dark Shadow
+        val darkPaint = android.graphics.Paint().apply {
+            isAntiAlias = true
+            color = darkShadowColor.toArgb()
+            maskFilter = android.graphics.BlurMaskFilter(blurPx, android.graphics.BlurMaskFilter.Blur.NORMAL)
+            style = android.graphics.Paint.Style.STROKE
+            strokeWidth = offsetPx * 2.2f
+        }
+        nativeCanvas.save()
+        val pathDark = android.graphics.Path()
+        pathDark.addRoundRect(0f, 0f, size.width, size.height, cornerPx, cornerPx, android.graphics.Path.Direction.CW)
+        nativeCanvas.clipPath(pathDark)
+        nativeCanvas.drawRoundRect(-offsetPx, -offsetPx, size.width + offsetPx, size.height + offsetPx, cornerPx, cornerPx, darkPaint)
+        nativeCanvas.restore()
+
+        // Bottom-Right Inner Light Highlight
+        val lightPaint = android.graphics.Paint().apply {
+            isAntiAlias = true
+            color = lightShadowColor.toArgb()
+            maskFilter = android.graphics.BlurMaskFilter(blurPx, android.graphics.BlurMaskFilter.Blur.NORMAL)
+            style = android.graphics.Paint.Style.STROKE
+            strokeWidth = offsetPx * 2.2f
+        }
+        nativeCanvas.save()
+        val pathLight = android.graphics.Path()
+        pathLight.addRoundRect(0f, 0f, size.width, size.height, cornerPx, cornerPx, android.graphics.Path.Direction.CW)
+        nativeCanvas.clipPath(pathLight)
+        nativeCanvas.drawRoundRect(offsetPx, offsetPx, size.width + offsetPx * 2f, size.height + offsetPx * 2f, cornerPx, cornerPx, lightPaint)
+        nativeCanvas.restore()
+    }
+}
+
+@Composable
+fun NeoRaisedSurface(
+    modifier: Modifier = Modifier,
+    cornerRadius: Dp = 22.dp,
+    shadowOffset: Dp = 6.dp,
+    blurRadius: Dp = 10.dp,
+    backgroundColor: Color = NeoBg,
+    contentPadding: PaddingValues = PaddingValues(20.dp),
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .neoRaised(
+                cornerRadius = cornerRadius,
+                shadowOffset = shadowOffset,
+                blurRadius = blurRadius,
+                backgroundColor = backgroundColor
+            )
+            .padding(contentPadding)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            content = content
+        )
+    }
+}
+
 @Composable
 fun BehavioralWellGlassCard(
     modifier: Modifier = Modifier,
-    cornerRadius: Dp = 24.dp,
+    cornerRadius: Dp = 22.dp,
     backgroundColor: Color = NeoBg,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    Surface(
+    NeoRaisedSurface(
+        modifier = modifier,
+        cornerRadius = cornerRadius,
+        backgroundColor = backgroundColor,
+        content = content
+    )
+}
+
+@Composable
+fun NeoInsetSurface(
+    modifier: Modifier = Modifier,
+    cornerRadius: Dp = 16.dp,
+    shadowOffset: Dp = 4.dp,
+    blurRadius: Dp = 6.dp,
+    backgroundColor: Color = NeoInsetBg,
+    contentPadding: PaddingValues = PaddingValues(16.dp),
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .shadow(
-                elevation = 8.dp,
-                shape = RoundedCornerShape(cornerRadius),
-                ambientColor = NeoShadowDark,
-                spotColor = NeoShadowLight
-            ),
-        shape = RoundedCornerShape(cornerRadius),
-        color = backgroundColor
+            .neoInset(
+                cornerRadius = cornerRadius,
+                shadowOffset = shadowOffset,
+                blurRadius = blurRadius,
+                backgroundColor = backgroundColor
+            )
+            .padding(contentPadding)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(22.dp),
+            modifier = Modifier.fillMaxWidth(),
             content = content
         )
     }
@@ -56,22 +279,14 @@ fun BehavioralWellGlassCard(
 @Composable
 fun NeomorphicInsetContainer(
     modifier: Modifier = Modifier,
-    cornerRadius: Dp = 18.dp,
+    cornerRadius: Dp = 16.dp,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    Surface(
-        modifier = modifier
-            .fillMaxWidth(),
-        shape = RoundedCornerShape(cornerRadius),
-        color = Color(0xFFDFDCF0)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            content = content
-        )
-    }
+    NeoInsetSurface(
+        modifier = modifier,
+        cornerRadius = cornerRadius,
+        content = content
+    )
 }
 
 @Composable
@@ -102,18 +317,19 @@ fun RefinedCircularRiskGauge(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Outer Housing (Layer 1, 2, 3: Raised Circular Neomorphic Disc)
         Box(
             modifier = Modifier
-                .size(210.dp)
-                .shadow(10.dp, CircleShape, ambientColor = NeoShadowDark, spotColor = NeoShadowLight)
-                .background(NeoBg, CircleShape)
-                .padding(14.dp),
+                .size(220.dp)
+                .neoRaisedCircle(shadowOffset = 8.dp, blurRadius = 14.dp, backgroundColor = NeoBg)
+                .padding(16.dp),
             contentAlignment = Alignment.Center
         ) {
+            // Layer 4 & 5: Inset Track + Colored Progress Arc
             Canvas(modifier = Modifier.fillMaxSize()) {
-                val strokeWidth = 14.dp.toPx()
+                val strokeWidth = 16.dp.toPx()
 
-                // Soft Track Arc
+                // Layer 4: Inset Track Ring
                 drawArc(
                     color = Color(0xFFC4C1DA),
                     startAngle = 140f,
@@ -122,7 +338,7 @@ fun RefinedCircularRiskGauge(
                     style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
                 )
 
-                // Active Score Arc
+                // Layer 5: Active Score Arc
                 drawArc(
                     color = stageColor,
                     startAngle = 140f,
@@ -132,45 +348,119 @@ fun RefinedCircularRiskGauge(
                 )
             }
 
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+            // Layer 6: Central Value Area (Raised Inner Circle)
+            Box(
+                modifier = Modifier
+                    .size(130.dp)
+                    .neoRaisedCircle(shadowOffset = 4.dp, blurRadius = 6.dp, backgroundColor = NeoBg),
+                contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "${animatedScore.toInt()}",
-                    style = MaterialTheme.typography.displayLarge.copy(
-                        fontSize = 44.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = TextPrimaryDark
-                    )
-                )
-                
-                Box(
-                    modifier = Modifier
-                        .padding(top = 2.dp)
-                        .clip(CircleShape)
-                        .background(stageColor.copy(alpha = 0.15f))
-                        .padding(horizontal = 12.dp, vertical = 3.dp)
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = stageLabel.uppercase(),
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            color = stageColor,
+                        text = "${animatedScore.toInt()}",
+                        style = MaterialTheme.typography.displayLarge.copy(
+                            fontSize = 42.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            fontSize = 10.sp,
-                            letterSpacing = 0.5.sp
+                            color = TextPrimaryDark
                         )
                     )
-                }
 
+                    Box(
+                        modifier = Modifier
+                            .padding(top = 2.dp)
+                            .clip(CircleShape)
+                            .background(stageColor.copy(alpha = 0.15f))
+                            .padding(horizontal = 10.dp, vertical = 3.dp)
+                    ) {
+                        Text(
+                            text = stageLabel.uppercase(),
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                color = stageColor,
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 9.sp,
+                                letterSpacing = 0.5.sp
+                            )
+                        )
+                    }
+
+                    val safeConfidence = when {
+                        confidence <= 1.0f -> confidence * 100.0f
+                        else -> confidence
+                    }.coerceIn(0.0f, 100.0f)
+
+                    Text(
+                        text = "Confidence ${safeConfidence.toInt()}%",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = TextSecondaryDark,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.SemiBold
+                        ),
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TactileNeoButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
+    enabled: Boolean = true,
+    isLoading: Boolean = false,
+    containerColor: Color = NeoBg,
+    contentColor: Color = PrimaryCyan,
+    cornerRadius: Dp = 18.dp
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    val buttonModifier = if (isPressed) {
+        Modifier.neoInset(cornerRadius = cornerRadius, shadowOffset = 3.dp, blurRadius = 4.dp, backgroundColor = NeoInsetBg)
+    } else {
+        Modifier.neoRaised(cornerRadius = cornerRadius, shadowOffset = 6.dp, blurRadius = 8.dp, backgroundColor = containerColor)
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(52.dp)
+            .then(buttonModifier)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                enabled = enabled && !isLoading,
+                onClick = onClick
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        if (isLoading) {
+            CircularProgressIndicator(
+                color = contentColor,
+                modifier = Modifier.size(24.dp)
+            )
+        } else {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                if (icon != null) {
+                    Icon(icon, contentDescription = null, tint = contentColor, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
                 Text(
-                    text = "Confidence: ${confidence.toInt()}%",
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color = TextSecondaryDark,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold
-                    ),
-                    modifier = Modifier.padding(top = 6.dp)
+                    text = text,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        color = contentColor,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 16.sp
+                    )
                 )
             }
         }
@@ -186,46 +476,50 @@ fun GradientButton(
     isLoading: Boolean = false,
     icon: ImageVector? = null
 ) {
-    Button(
+    TactileNeoButton(
+        text = text,
         onClick = onClick,
-        enabled = enabled && !isLoading,
-        modifier = modifier
-            .fillMaxWidth()
-            .height(52.dp)
-            .shadow(6.dp, RoundedCornerShape(16.dp), ambientColor = NeoShadowDark, spotColor = NeoShadowLight),
-        colors = ButtonDefaults.buttonColors(containerColor = NeoBg),
-        shape = RoundedCornerShape(16.dp),
-        contentPadding = PaddingValues(0.dp)
+        modifier = modifier,
+        enabled = enabled,
+        isLoading = isLoading,
+        icon = icon
+    )
+}
+
+@Composable
+fun NeomorphicTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    modifier: Modifier = Modifier,
+    singleLine: Boolean = true,
+    visualTransformation: androidx.compose.ui.text.input.VisualTransformation = androidx.compose.ui.text.input.VisualTransformation.None
+) {
+    NeoInsetSurface(
+        modifier = modifier,
+        cornerRadius = 14.dp,
+        shadowOffset = 3.dp,
+        blurRadius = 5.dp,
+        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp)
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            if (isLoading) {
-                CircularProgressIndicator(
-                    color = PrimaryCyan,
-                    modifier = Modifier.size(24.dp)
-                )
-            } else {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    if (icon != null) {
-                        Icon(icon, contentDescription = null, tint = PrimaryCyan, modifier = Modifier.size(20.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                    }
-                    Text(
-                        text = text,
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            color = PrimaryCyan,
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 16.sp
-                        )
-                    )
-                }
-            }
-        }
+        TextField(
+            value = value,
+            onValueChange = onValueChange,
+            label = { Text(label, color = TextSecondaryDark) },
+            singleLine = singleLine,
+            visualTransformation = visualTransformation,
+            modifier = Modifier.fillMaxWidth(),
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = Color.Transparent,
+                unfocusedContainerColor = Color.Transparent,
+                disabledContainerColor = Color.Transparent,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                disabledIndicatorColor = Color.Transparent,
+                focusedTextColor = TextPrimaryDark,
+                unfocusedTextColor = TextPrimaryDark
+            )
+        )
     }
 }
 
@@ -289,17 +583,19 @@ fun BehavioralWellBottomBar(
     currentTab: NavigationTab,
     onTabSelected: (NavigationTab) -> Unit
 ) {
-    Surface(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(10.dp, RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp), ambientColor = NeoShadowDark, spotColor = NeoShadowLight),
-        color = NeoBg,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+            .neoRaised(
+                cornerRadius = 28.dp,
+                shadowOffset = 6.dp,
+                blurRadius = 10.dp,
+                backgroundColor = NeoBg
+            )
+            .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 10.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -307,29 +603,38 @@ fun BehavioralWellBottomBar(
                 val selected = (tab == currentTab)
                 val color = if (selected) PrimaryCyan else TextSecondaryDark
 
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(if (selected) Color(0xFFDFDCF0) else Color.Transparent)
+                val itemModifier = if (selected) {
+                    Modifier.neoInset(cornerRadius = 16.dp, shadowOffset = 3.dp, blurRadius = 4.dp, backgroundColor = NeoInsetBg)
+                } else {
+                    Modifier.clip(RoundedCornerShape(16.dp))
+                }
+
+                Box(
+                    modifier = itemModifier
                         .clickable { onTabSelected(tab) }
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = tab.icon,
-                        contentDescription = tab.label,
-                        tint = color,
-                        modifier = Modifier.size(22.dp)
-                    )
-                    Text(
-                        text = tab.label,
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            color = color,
-                            fontWeight = if (selected) FontWeight.ExtraBold else FontWeight.Medium,
-                            fontSize = 10.sp
-                        ),
-                        modifier = Modifier.padding(top = 2.dp)
-                    )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = tab.icon,
+                            contentDescription = tab.label,
+                            tint = color,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Text(
+                            text = tab.label,
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                color = color,
+                                fontWeight = if (selected) FontWeight.ExtraBold else FontWeight.Medium,
+                                fontSize = 10.sp
+                            ),
+                            modifier = Modifier.padding(top = 2.dp)
+                        )
+                    }
                 }
             }
         }
@@ -345,7 +650,7 @@ fun SkeletonLoader(
         modifier = modifier
             .fillMaxWidth()
             .height(height)
-            .clip(RoundedCornerShape(20.dp))
-            .background(Color(0xFFDFDCF0))
+            .neoInset(cornerRadius = 20.dp, shadowOffset = 3.dp, blurRadius = 5.dp, backgroundColor = NeoInsetBg)
     )
 }
+

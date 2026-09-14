@@ -1,7 +1,7 @@
 import React from 'react';
 import { ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
 
-export default function WellnessGauge({ riskScore = 15, stage = 0, stageLabel = "Stage 0 — Stable", trend = "stable", persistenceDays = 1, confidence = 0.92 }) {
+export default function WellnessGauge({ riskScore = 15, stage = 0, stageLabel = "Stage 0 — Stable", trend = "stable", persistenceDays = 1, confidence = 92 }) {
   // SVG Radial parameters
   const radius = 80;
   const strokeWidth = 14;
@@ -10,6 +10,11 @@ export default function WellnessGauge({ riskScore = 15, stage = 0, stageLabel = 
   // Semi-circle arc
   const arcLength = circumference * 0.75;
   const strokeDashoffset = arcLength - (riskScore / 100) * arcLength;
+
+  // Safe confidence score normalization (strictly between 0% and 100%)
+  const rawConf = typeof confidence === 'number' ? confidence : parseFloat(confidence) || 92;
+  const normalizedConf = rawConf <= 1.0 ? rawConf * 100 : rawConf;
+  const clampedConf = Math.min(100, Math.max(0, Math.round(normalizedConf)));
 
   const getStageColor = (s) => {
     switch (s) {
@@ -92,7 +97,7 @@ export default function WellnessGauge({ riskScore = 15, stage = 0, stageLabel = 
             Risk Index
           </div>
           <div style={{ fontSize: '0.75rem', color: 'var(--accent-violet)', fontWeight: 600, marginTop: '2px' }}>
-            Confidence {Math.round((confidence || 0.87) * 100)}%
+            Confidence {clampedConf}%
           </div>
         </div>
       </div>

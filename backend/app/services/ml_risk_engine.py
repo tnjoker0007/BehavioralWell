@@ -87,6 +87,8 @@ class HybridMLRiskEngine(BaseRiskEngine):
         # 1. Group Z-scores by Modality & Compute Modality Scores
         modality_zs: Dict[str, list] = {m: [] for m in ALL_MODALITIES}
         for feat, z in z_scores.items():
+            if not isinstance(z, (int, float)):
+                continue
             base_feat = feat.replace("_z", "")
             modality = MODALITY_MAP.get(base_feat, MODALITY_MAP.get(feat, "keyboard"))
             weight = FEATURE_CONFIG.get(base_feat, {}).get("weight", 1.0)
@@ -136,44 +138,39 @@ class HybridMLRiskEngine(BaseRiskEngine):
         rf_confidence = 0.0
 
         if self._ml_model is not None:
-            # Helper to retrieve feature Z-score by exact key or suffix
-            def get_z(name_with_z: str) -> Optional[float]:
+            # Helper to retrieve feature Z-score by exact key or suffix (default 0.0 = baseline)
+            def get_z(name_with_z: str) -> float:
                 base_name = name_with_z.replace("_z", "")
                 v = z_scores.get(name_with_z)
                 if v is None:
                     v = z_scores.get(base_name)
-                return float(v) if v is not None else None
+                return float(v) if v is not None else 0.0
 
             feature_vals = [get_z(f) for f in ML_FEATURE_ORDER]
-            all_features_present = all(v is not None for v in feature_vals)
-            all_modalities_consented = all(consent_flags.get(f"{m}_enabled", True) for m in ALL_MODALITIES)
+            snapshot_id = z_scores.get("snapshotId", "live-telemetry")
 
-            if all_features_present and all_modalities_consented:
-                try:
-                    import pandas as pd
-                    # Construct DataFrame matching exact ML_FEATURE_ORDER by column names
-                    X = pd.DataFrame([feature_vals], columns=ML_FEATURE_ORDER)
-                    
-                    # Predict class and probabilities
-                    rf_prediction = int(self._ml_model.predict(X)[0])
-                    probabilities = self._ml_model.predict_proba(X)[0]
-                    
-                    # Explicit class probability mapping matching model.classes_
-                    class_probabilities = {
-                        int(cls): float(prob)
-                        for cls, prob in zip(self._ml_model.classes_, probabilities)
-                    }
-                    rf_confidence = class_probabilities.get(rf_prediction, 0.5)
-                    fallback = False
+            try:
+                import pandas as pd
+                # Construct DataFrame matching exact ML_FEATURE_ORDER by column names
+                X = pd.DataFrame([feature_vals], columns=ML_FEATURE_ORDER)
+                
+                # Predict class and probabilities using loaded Random Forest model
+                rf_prediction = int(self._ml_model.predict(X)[0])
+                probabilities = self._ml_model.predict_proba(X)[0]
+                
+                # Explicit class probability mapping matching model.classes_
+                class_probabilities = {
+                    int(cls): float(prob)
+                    for cls, prob in zip(self._ml_model.classes_, probabilities)
+                }
+                rf_confidence = class_probabilities.get(rf_prediction, 0.5)
+                fallback = False
 
-                    # Safe diagnostic log — No telemetry values, tokens, or PII logged
-                    print(f"[ML INFERENCE] model=behavioral_risk_rf features=8 prediction={rf_prediction} confidence={rf_confidence:.2f} fallback=false")
-                except Exception as ex:
-                    fallback = True
-                    print(f"[ML INFERENCE] model=behavioral_risk_rf fallback=true error={ex}")
-            else:
+                # Safe diagnostic log — No telemetry values, tokens, or PII logged
+                print(f"[ML INFERENCE] model=behavioral_risk_rf features=8 snapshotId={snapshot_id} prediction={rf_prediction} confidence={rf_confidence:.2f} fallback=false")
+            except Exception as ex:
                 fallback = True
-                print(f"[ML INFERENCE] model=behavioral_risk_rf fallback=true reason=missing_features_or_consent")
+                print(f"[ML INFERENCE] model=behavioral_risk_rf fallback=true error={ex}")
         else:
             fallback = True
             print(f"[ML INFERENCE] model=behavioral_risk_rf fallback=true reason=model_not_loaded")
@@ -235,10 +232,11 @@ class HybridMLRiskEngine(BaseRiskEngine):
         density_weight = min(100.0, (samples_count / 30.0) * 100.0)
 
         confidence_score = (maturity_weight * 0.40) + (coverage_weight * 0.30) + (density_weight * 0.30)
-        if not fallback:
+        if not fallback and baseline_status != "insufficient":
             # ML prediction confidence boosts overall system confidence
-            confidence_score = min(100.0, confidence_score * 0.8 + (rf_confidence * 100.0) * 0.2)
+            confidence_score = confidence_score * 0.8 + (rf_confidence * 100.0) * 0.2
 
+        confidence_score = min(100.0, max(0.0, confidence_score))
         stage_label = STAGE_LABELS.get(stage, STAGE_LABELS[0])
 
         return round(risk_score, 1), stage, stage_label, round(confidence_score, 1), modality_scores

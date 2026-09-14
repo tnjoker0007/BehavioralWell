@@ -40,8 +40,8 @@ class ActivityCollector(
         val variance = (motionSnapshot["accelerationVariance"] as? Number)?.toFloat() ?: 0.0f
 
         val activityState = when {
-            intensity < 0.25f -> "Stationary"
-            intensity < 1.50f -> "Walking"
+            intensity < 0.18f -> "Stationary"
+            intensity < 1.20f -> "Walking"
             else -> "Active Movement"
         }
 
