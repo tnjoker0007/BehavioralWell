@@ -4,9 +4,13 @@ export const DEMO_USER_ID = 'usr_demo12345';
 
 export async function fetchJson(endpoint, options = {}) {
   try {
+    const token = localStorage.getItem('token');
+    const authHeaders = token ? { 'Authorization': `Bearer ${token}` } : {};
+
     const res = await fetch(`${API_BASE}${endpoint}`, {
       headers: {
         'Content-Type': 'application/json',
+        ...authHeaders,
         ...options.headers,
       },
       ...options,

@@ -34,7 +34,7 @@ class AuthRepository(private val tokenStorage: TokenStorage) {
                 NetworkResult.Error("Login failed: ${response.code()} ${response.message()}")
             }
         } catch (e: Exception) {
-            NetworkResult.Error("Network error: ${e.localizedMessage ?: "Unknown error"}")
+            NetworkResult.Error(ai.behavioralwell.app.core.network.NetworkErrorFormatter.formatError(e))
         }
     }
 
@@ -55,7 +55,7 @@ class AuthRepository(private val tokenStorage: TokenStorage) {
                 NetworkResult.Error("Registration failed: ${response.code()} ${response.message()}")
             }
         } catch (e: Exception) {
-            NetworkResult.Error("Network error: ${e.localizedMessage ?: "Unknown error"}")
+            NetworkResult.Error(ai.behavioralwell.app.core.network.NetworkErrorFormatter.formatError(e))
         }
     }
 

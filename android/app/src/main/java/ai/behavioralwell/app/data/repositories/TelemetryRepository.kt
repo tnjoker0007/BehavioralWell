@@ -174,7 +174,7 @@ class TelemetryRepository(private val context: Context) {
                 NetworkResult.Error("Failed to load dashboard: ${response.code()}")
             }
         } catch (e: Exception) {
-            NetworkResult.Error("Network error: ${e.localizedMessage ?: "Unknown error"}")
+            NetworkResult.Error(ai.behavioralwell.app.core.network.NetworkErrorFormatter.formatError(e))
         }
     }
 
@@ -187,7 +187,7 @@ class TelemetryRepository(private val context: Context) {
                 NetworkResult.Error("Failed to fetch risk score: ${response.code()}")
             }
         } catch (e: Exception) {
-            NetworkResult.Error("Network error: ${e.localizedMessage ?: "Unknown error"}")
+            NetworkResult.Error(ai.behavioralwell.app.core.network.NetworkErrorFormatter.formatError(e))
         }
     }
 
@@ -200,7 +200,7 @@ class TelemetryRepository(private val context: Context) {
                 NetworkResult.Error("Failed to start intervention: ${response.code()}")
             }
         } catch (e: Exception) {
-            NetworkResult.Error("Network error: ${e.localizedMessage ?: "Unknown error"}")
+            NetworkResult.Error(ai.behavioralwell.app.core.network.NetworkErrorFormatter.formatError(e))
         }
     }
 
@@ -213,7 +213,7 @@ class TelemetryRepository(private val context: Context) {
                 NetworkResult.Error("Failed to complete intervention: ${response.code()}")
             }
         } catch (e: Exception) {
-            NetworkResult.Error("Network error: ${e.localizedMessage ?: "Unknown error"}")
+            NetworkResult.Error(ai.behavioralwell.app.core.network.NetworkErrorFormatter.formatError(e))
         }
     }
 
@@ -226,7 +226,7 @@ class TelemetryRepository(private val context: Context) {
                 NetworkResult.Error("Failed to submit self-check: ${response.code()}")
             }
         } catch (e: Exception) {
-            NetworkResult.Error("Network error: ${e.localizedMessage ?: "Unknown error"}")
+            NetworkResult.Error(ai.behavioralwell.app.core.network.NetworkErrorFormatter.formatError(e))
         }
     }
 }
