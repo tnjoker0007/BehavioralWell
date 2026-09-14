@@ -10,11 +10,11 @@ export default function SelfCheckModal({ isOpen, onClose, onSubmit }) {
   if (!isOpen) return null;
 
   const moodOptions = [
-    { label: 'Good', icon: Smile, color: '#10b981' },
-    { label: 'Okay', icon: Smile, color: '#06b6d4' },
-    { label: 'Neutral', icon: Meh, color: '#f59e0b' },
-    { label: 'Low', icon: Frown, color: '#f97316' },
-    { label: 'Stressed', icon: AlertCircle, color: '#f43f5e' }
+    { label: 'Good', icon: Smile, color: '#10B981' },
+    { label: 'Okay', icon: Smile, color: '#06B6D4' },
+    { label: 'Neutral', icon: Meh, color: '#D97706' },
+    { label: 'Low', icon: Frown, color: '#EA580C' },
+    { label: 'Stressed', icon: AlertCircle, color: '#E11D48' }
   ];
 
   const handleSubmit = (e) => {
@@ -29,46 +29,46 @@ export default function SelfCheckModal({ isOpen, onClose, onSubmit }) {
 
   return (
     <div className="modal-overlay">
-      <div className="glass-card" style={{ maxWidth: '480px', width: '100%', position: 'relative' }}>
+      <div className="modal-card" style={{ position: 'relative' }}>
         <button
           onClick={onClose}
+          className="btn btn-secondary"
           style={{
             position: 'absolute',
             top: '16px',
             right: '16px',
-            background: 'none',
-            border: 'none',
-            color: 'var(--text-muted)',
-            cursor: 'pointer'
+            padding: '6px'
           }}
         >
-          <X size={20} />
+          <X size={18} color="var(--text-main)" />
         </button>
 
         {submitted ? (
           <div style={{ textAlign: 'center', padding: '30px 0' }}>
-            <Heart size={48} color="var(--primary)" style={{ margin: '0 auto 12px' }} />
-            <h3 style={{ fontSize: '1.25rem', color: '#fff', fontWeight: 700 }}>Check-in Logged</h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-dim)', marginTop: '6px' }}>
+            <Heart size={48} color="var(--accent-rose)" style={{ margin: '0 auto 12px' }} />
+            <h3 style={{ fontSize: '1.25rem', color: 'var(--text-main)', fontWeight: 800 }}>Check-in Logged</h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500, marginTop: '6px' }}>
               Your self-reported context has been safely added to your behavioral model.
             </p>
           </div>
         ) : (
           <form onSubmit={handleSubmit}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-              <Heart size={22} color="var(--primary)" />
-              <h3 style={{ fontSize: '1.2rem', color: '#fff', fontWeight: 700 }}>
+              <div style={{ padding: '8px', borderRadius: '10px', background: 'var(--bg-neo)', boxShadow: 'var(--neo-raised-sm)', display: 'flex' }}>
+                <Heart size={20} color="var(--accent-rose)" />
+              </div>
+              <h3 style={{ fontSize: '1.2rem', color: 'var(--text-main)', fontWeight: 800 }}>
                 Interactive Self-Check
               </h3>
             </div>
             
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '20px' }}>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500, marginBottom: '20px' }}>
               How are you feeling right now? Your input helps personalize your baseline model.
             </p>
 
             {/* Mood selector */}
             <div style={{ marginBottom: '20px' }}>
-              <label style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 600, display: 'block', marginBottom: '10px' }}>
+              <label style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 700, display: 'block', marginBottom: '10px' }}>
                 CURRENT MOOD
               </label>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
@@ -80,19 +80,15 @@ export default function SelfCheckModal({ isOpen, onClose, onSubmit }) {
                       type="button"
                       key={m.label}
                       onClick={() => setMood(m.label)}
+                      className="btn"
                       style={{
                         padding: '10px 4px',
-                        borderRadius: '10px',
-                        background: isSelected ? 'rgba(6, 182, 212, 0.2)' : 'rgba(255, 255, 255, 0.04)',
-                        border: isSelected ? `1px solid ${m.color}` : '1px solid var(--border-glass)',
-                        color: isSelected ? '#ffffff' : 'var(--text-muted)',
-                        display: 'flex',
                         flexDirection: 'column',
-                        alignItems: 'center',
                         gap: '6px',
-                        cursor: 'pointer',
-                        fontSize: '0.75rem',
-                        fontWeight: 600
+                        boxShadow: isSelected ? 'var(--neo-inset)' : 'var(--neo-raised-sm)',
+                        color: isSelected ? 'var(--accent-violet)' : 'var(--text-muted)',
+                        fontWeight: isSelected ? 800 : 600,
+                        fontSize: '0.75rem'
                       }}
                     >
                       <Icon size={20} color={m.color} />
@@ -105,9 +101,9 @@ export default function SelfCheckModal({ isOpen, onClose, onSubmit }) {
 
             {/* Stress level */}
             <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 600, marginBottom: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 700, marginBottom: '8px' }}>
                 <span>STRESS LEVEL</span>
-                <span style={{ color: 'var(--primary)' }}>{stress} / 5</span>
+                <span style={{ color: 'var(--accent-violet)' }}>{stress} / 5</span>
               </div>
               <input
                 type="range"
@@ -115,30 +111,21 @@ export default function SelfCheckModal({ isOpen, onClose, onSubmit }) {
                 max="5"
                 value={stress}
                 onChange={(e) => setStress(parseInt(e.target.value))}
-                style={{ width: '100%', accentColor: 'var(--primary)' }}
+                style={{ width: '100%', accentColor: 'var(--accent-violet)' }}
               />
             </div>
 
             {/* Optional note */}
             <div style={{ marginBottom: '24px' }}>
-              <label style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 600, display: 'block', marginBottom: '8px' }}>
+              <label style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 700, display: 'block', marginBottom: '8px' }}>
                 CONTEXT / NOTE (OPTIONAL)
               </label>
               <textarea
+                className="neo-input"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="e.g. Preparing for major exams, travel fatigue, late work session..."
                 rows={2}
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  borderRadius: '8px',
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  border: '1px solid var(--border-glass)',
-                  color: '#ffffff',
-                  fontFamily: 'var(--font-body)',
-                  fontSize: '0.85rem'
-                }}
               />
             </div>
 

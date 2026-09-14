@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldCheck, Lock, Trash2, CheckCircle2, AlertTriangle, EyeOff } from 'lucide-react';
+import { ShieldCheck, Lock, Trash2, CheckCircle2 } from 'lucide-react';
 
 export default function PrivacyConsentView({ consentData, onUpdateConsent, onDeleteData }) {
   const [consent, setConsent] = useState(consentData || {
@@ -36,27 +36,31 @@ export default function PrivacyConsentView({ consentData, onUpdateConsent, onDel
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '800px', margin: '0 auto' }}>
-      <div className="glass-card">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '820px', margin: '0 auto' }}>
+      <div className="neo-card">
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-          <ShieldCheck size={26} color="var(--primary)" />
-          <h2 style={{ fontSize: '1.4rem', color: '#fff', fontWeight: 800 }}>
-            PRIVACY & DATA CONSENT HUB
-          </h2>
+          <div style={{ padding: '8px', borderRadius: '12px', background: 'var(--bg-neo)', boxShadow: 'var(--neo-raised-sm)', display: 'flex' }}>
+            <ShieldCheck size={26} color="var(--accent-violet)" />
+          </div>
+          <div>
+            <h2 style={{ fontSize: '1.4rem', color: 'var(--text-main)', fontWeight: 800 }}>
+              YOUR DATA. YOUR CONTROL.
+            </h2>
+            <p style={{ fontSize: '0.85rem', color: 'var(--accent-violet)', fontWeight: 700, letterSpacing: '0.04em' }}>
+              PRIVACY & DATA CONSENT HUB
+            </p>
+          </div>
         </div>
-        <p style={{ fontSize: '0.9rem', color: 'var(--text-dim)' }}>
-          You maintain full ownership of your behavioral data. Toggle modality permissions or wipe your stored data at any time.
+        <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '8px', fontWeight: 500 }}>
+          You maintain full ownership of your behavioral data. Toggle modality permissions or wipe your stored data at any time. Zero raw text, keystrokes, or GPS location records are ever collected.
         </p>
 
         {message && (
-          <div style={{
+          <div className="neo-card-inset" style={{
             marginTop: '16px',
-            padding: '12px 16px',
-            borderRadius: '10px',
-            background: 'rgba(16, 185, 129, 0.15)',
-            border: '1px solid rgba(16, 185, 129, 0.3)',
-            color: '#10b981',
+            color: 'var(--accent-emerald)',
             fontSize: '0.85rem',
+            fontWeight: 700,
             display: 'flex',
             alignItems: 'center',
             gap: '8px'
@@ -68,11 +72,11 @@ export default function PrivacyConsentView({ consentData, onUpdateConsent, onDel
       </div>
 
       {/* Permission Toggles */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         {categories.map(cat => {
           const enabled = consent[cat.key];
           return (
-            <div key={cat.key} className="glass-card" style={{
+            <div key={cat.key} className="neo-card" style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -81,58 +85,41 @@ export default function PrivacyConsentView({ consentData, onUpdateConsent, onDel
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
                 <span style={{ fontSize: '1.5rem', marginTop: '2px' }}>{cat.icon}</span>
                 <div>
-                  <h4 style={{ fontSize: '1.05rem', color: '#fff', fontWeight: 700 }}>
+                  <h4 style={{ fontSize: '1.05rem', color: 'var(--text-main)', fontWeight: 800 }}>
                     {cat.label}
                   </h4>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--text-dim)', marginTop: '2px' }}>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '2px', fontWeight: 500 }}>
                     {cat.desc}
                   </p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--primary)', marginTop: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--accent-violet)', marginTop: '6px', fontWeight: 700 }}>
                     <Lock size={12} />
                     <span>{cat.safe}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Toggle Switch */}
-              <button
-                onClick={() => togglePermission(cat.key)}
-                style={{
-                  width: '56px',
-                  height: '30px',
-                  borderRadius: '9999px',
-                  background: enabled ? 'var(--primary)' : 'rgba(255, 255, 255, 0.1)',
-                  border: 'none',
-                  position: 'relative',
-                  cursor: 'pointer',
-                  transition: 'background 0.3s ease',
-                  flexShrink: 0
-                }}
-              >
-                <div style={{
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  background: '#ffffff',
-                  position: 'absolute',
-                  top: '3px',
-                  left: enabled ? '29px' : '3px',
-                  transition: 'left 0.3s ease'
-                }} />
-              </button>
+              {/* Neomorphic Tactile Toggle Switch */}
+              <label className="neo-toggle">
+                <input
+                  type="checkbox"
+                  checked={enabled}
+                  onChange={() => togglePermission(cat.key)}
+                />
+                <span className="neo-toggle-slider" />
+              </label>
             </div>
           );
         })}
       </div>
 
       {/* Danger Zone: Data Wipe */}
-      <div className="glass-card" style={{ border: '1px solid rgba(244, 63, 94, 0.3)', background: 'rgba(244, 63, 94, 0.05)' }}>
+      <div className="neo-card" style={{ border: '1px solid rgba(225, 29, 72, 0.3)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
           <div>
-            <h4 style={{ fontSize: '1.05rem', color: '#f43f5e', fontWeight: 700 }}>
+            <h4 style={{ fontSize: '1.05rem', color: 'var(--accent-rose)', fontWeight: 800 }}>
               PERMANENT DATA DELETION REQUEST
             </h4>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-dim)', marginTop: '4px' }}>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px', fontWeight: 500 }}>
               Purge all historical behavioral telemetry, baseline statistics, and risk logs permanently.
             </p>
           </div>

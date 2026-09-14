@@ -10,11 +10,11 @@ export default function InterventionsView({ onLogActivity }) {
   const [activeActivity, setActiveActivity] = useState('breathing');
 
   const activities = [
-    { id: 'breathing', label: 'Breathing Reset', icon: Wind, color: '#06b6d4' },
-    { id: 'reaction', label: 'Reaction Speed', icon: Zap, color: '#8b5cf6' },
-    { id: 'focus', label: 'Focus Challenge', icon: Target, color: '#10b981' },
-    { id: 'micro_goal', label: 'Micro Goals', icon: CheckSquare, color: '#3b82f6' },
-    { id: 'detox', label: 'Digital Detox', icon: Smartphone, color: '#f59e0b' }
+    { id: 'breathing', label: 'Breathing Reset', icon: Wind, color: '#0D9488' },
+    { id: 'reaction', label: 'Reaction Speed', icon: Zap, color: '#7C3AED' },
+    { id: 'focus', label: 'Focus Challenge', icon: Target, color: '#10B981' },
+    { id: 'micro_goal', label: 'Micro Goals', icon: CheckSquare, color: '#2563EB' },
+    { id: 'detox', label: 'Digital Detox', icon: Smartphone, color: '#D97706' }
   ];
 
   const handleActivityComplete = (resultData) => {
@@ -23,19 +23,23 @@ export default function InterventionsView({ onLogActivity }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      <div className="glass-card">
+      <div className="neo-card">
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-          <HeartHandshake size={24} color="var(--primary)" />
-          <h2 style={{ fontSize: '1.4rem', color: '#fff', fontWeight: 800 }}>
-            INTERACTIVE PREVENTIVE INTERVENTIONS
-          </h2>
+          <div style={{ padding: '8px', borderRadius: '12px', background: 'var(--bg-neo)', boxShadow: 'var(--neo-raised-sm)', display: 'flex' }}>
+            <HeartHandshake size={24} color="var(--accent-rose)" />
+          </div>
+          <div>
+            <h2 style={{ fontSize: '1.4rem', color: 'var(--text-main)', fontWeight: 800 }}>
+              PREVENTIVE INTERVENTIONS
+            </h2>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+              Evidence-informed micro-activities tailored to recalibrate physiological stress, focus, and digital routines.
+            </p>
+          </div>
         </div>
-        <p style={{ fontSize: '0.9rem', color: 'var(--text-dim)' }}>
-          Evidence-informed micro-activities tailored to recalibrate physiological stress, focus, and digital routines.
-        </p>
 
         {/* Activity Selector Tabs */}
-        <div style={{ display: 'flex', gap: '10px', marginTop: '20px', overflowX: 'auto', paddingBottom: '4px' }}>
+        <div style={{ display: 'flex', gap: '12px', marginTop: '20px', overflowX: 'auto', padding: '4px' }}>
           {activities.map(a => {
             const Icon = a.icon;
             const isSelected = activeActivity === a.id;
@@ -43,19 +47,11 @@ export default function InterventionsView({ onLogActivity }) {
               <button
                 key={a.id}
                 onClick={() => setActiveActivity(a.id)}
+                className="btn"
                 style={{
-                  padding: '10px 16px',
-                  borderRadius: '10px',
-                  background: isSelected ? 'rgba(6, 182, 212, 0.15)' : 'rgba(255, 255, 255, 0.03)',
-                  border: isSelected ? `1px solid ${a.color}` : '1px solid var(--border-glass)',
-                  color: isSelected ? '#ffffff' : 'var(--text-muted)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  cursor: 'pointer',
-                  fontSize: '0.9rem',
-                  fontWeight: 600,
-                  transition: 'all 0.2s ease'
+                  boxShadow: isSelected ? 'var(--neo-inset)' : 'var(--neo-raised-sm)',
+                  color: isSelected ? 'var(--accent-violet)' : 'var(--text-muted)',
+                  fontWeight: isSelected ? 800 : 600
                 }}
               >
                 <Icon size={18} color={a.color} />

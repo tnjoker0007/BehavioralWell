@@ -37,57 +37,34 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
   };
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'rgba(0, 0, 0, 0.75)',
-      backdropFilter: 'blur(8px)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000,
-      padding: '16px'
-    }}>
-      <div className="glass-card" style={{
-        maxWidth: '480px',
-        width: '100%',
-        padding: '32px',
-        borderRadius: '24px',
-        border: '1px solid var(--border-glass)',
-        boxShadow: '0 20px 50px rgba(0, 0, 0, 0.6)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '24px'
-      }}>
+    <div className="modal-overlay">
+      <div className="modal-card" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
         {/* Header */}
         <div style={{ textAlign: 'center' }}>
           <div style={{
             width: '56px',
             height: '56px',
-            borderRadius: '16px',
-            background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
+            borderRadius: '18px',
+            background: 'var(--bg-neo)',
+            boxShadow: 'var(--neo-raised-sm)',
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
-            marginBottom: '12px',
-            boxShadow: '0 0 24px rgba(6, 182, 212, 0.4)'
+            marginBottom: '12px'
           }}>
-            <LogIn size={28} color="#ffffff" />
+            <LogIn size={28} color="var(--accent-violet)" />
           </div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#fff', margin: 0 }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)', margin: 0 }}>
             Sign In to BehavioralWell
           </h2>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-dim)', marginTop: '4px' }}>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, marginTop: '4px' }}>
             Choose User or Admin Role Login
           </p>
         </div>
 
         {/* Quick Role Switch Presets */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-dim)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
             Quick Demo Presets:
           </div>
 
@@ -99,20 +76,17 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
               alignItems: 'center',
               justifyContent: 'space-between',
               padding: '12px 16px',
-              background: 'rgba(168, 85, 247, 0.15)',
-              border: '1px solid rgba(168, 85, 247, 0.4)',
-              color: '#d8b4fe',
-              borderRadius: '12px'
+              color: 'var(--accent-violet)'
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <ShieldCheck size={20} color="#c084fc" />
+              <ShieldCheck size={20} color="var(--accent-violet)" />
               <div style={{ textAlign: 'left' }}>
-                <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>Log In as Admin / Clinician</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>admin@behavioralwell.ai • Full Access</div>
+                <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>Log In as Admin / Clinician</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500 }}>admin@behavioralwell.ai • Full Access</div>
               </div>
             </div>
-            <Sparkles size={16} color="#c084fc" />
+            <Sparkles size={16} color="var(--accent-violet)" />
           </button>
 
           <button
@@ -123,38 +97,33 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
               alignItems: 'center',
               justifyContent: 'space-between',
               padding: '12px 16px',
-              background: 'rgba(59, 130, 246, 0.15)',
-              border: '1px solid rgba(59, 130, 246, 0.4)',
-              color: '#93c5fd',
-              borderRadius: '12px'
+              color: 'var(--accent-blue)'
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <User size={20} color="#60a5fa" />
+              <User size={20} color="var(--accent-blue)" />
               <div style={{ textAlign: 'left' }}>
-                <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>Log In as Regular User</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>demo@behavioralwell.ai • Alex Morgan</div>
+                <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>Log In as Regular User</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500 }}>demo@behavioralwell.ai • Alex Morgan</div>
               </div>
             </div>
-            <CheckCircle2 size={16} color="#60a5fa" />
+            <CheckCircle2 size={16} color="var(--accent-blue)" />
           </button>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '4px 0' }}>
-          <div style={{ flex: 1, height: '1px', background: 'var(--border-glass)' }} />
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>OR CUSTOM LOGIN</span>
-          <div style={{ flex: 1, height: '1px', background: 'var(--border-glass)' }} />
+          <div style={{ flex: 1, height: '1px', background: 'rgba(196, 193, 218, 0.5)' }} />
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700 }}>OR CUSTOM LOGIN</span>
+          <div style={{ flex: 1, height: '1px', background: 'rgba(196, 193, 218, 0.5)' }} />
         </div>
 
         {/* Error Alert */}
         {error && (
-          <div style={{
+          <div className="neo-card-inset" style={{
             padding: '10px 14px',
-            background: 'rgba(239, 68, 68, 0.15)',
-            border: '1px solid rgba(239, 68, 68, 0.4)',
-            borderRadius: '10px',
-            color: '#fca5a5',
+            color: 'var(--accent-rose)',
             fontSize: '0.85rem',
+            fontWeight: 700,
             display: 'flex',
             alignItems: 'center',
             gap: '8px'
@@ -165,51 +134,35 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
         )}
 
         {/* Custom Credentials Form */}
-        <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div>
-            <label style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginBottom: '6px', display: 'block' }}>Email Address</label>
+            <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '6px', display: 'block' }}>Email Address</label>
             <div style={{ position: 'relative' }}>
-              <Mail size={18} color="var(--text-dim)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+              <Mail size={18} color="var(--text-muted)" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', zIndex: 2 }} />
               <input
                 type="email"
+                className="neo-input"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@behavioralwell.ai"
                 required
-                style={{
-                  width: '100%',
-                  padding: '10px 12px 10px 40px',
-                  borderRadius: '10px',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid var(--border-glass)',
-                  color: '#fff',
-                  fontSize: '0.9rem',
-                  boxSizing: 'border-box'
-                }}
+                style={{ paddingLeft: '42px' }}
               />
             </div>
           </div>
 
           <div>
-            <label style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginBottom: '6px', display: 'block' }}>Password</label>
+            <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '6px', display: 'block' }}>Password</label>
             <div style={{ position: 'relative' }}>
-              <Lock size={18} color="var(--text-dim)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+              <Lock size={18} color="var(--text-muted)" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', zIndex: 2 }} />
               <input
                 type="password"
+                className="neo-input"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
-                style={{
-                  width: '100%',
-                  padding: '10px 12px 10px 40px',
-                  borderRadius: '10px',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid var(--border-glass)',
-                  color: '#fff',
-                  fontSize: '0.9rem',
-                  boxSizing: 'border-box'
-                }}
+                style={{ paddingLeft: '42px' }}
               />
             </div>
           </div>

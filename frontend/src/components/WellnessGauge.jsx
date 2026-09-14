@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowUpRight, ArrowDownRight, Minus, ShieldAlert } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
 
 export default function WellnessGauge({ riskScore = 15, stage = 0, stageLabel = "Stage 0 — Stable", trend = "stable", persistenceDays = 1, confidence = 0.92 }) {
   // SVG Radial parameters
@@ -13,41 +13,61 @@ export default function WellnessGauge({ riskScore = 15, stage = 0, stageLabel = 
 
   const getStageColor = (s) => {
     switch (s) {
-      case 0: return '#10b981'; // Green
-      case 1: return '#06b6d4'; // Cyan
-      case 2: return '#f59e0b'; // Amber
-      case 3: return '#f97316'; // Orange
-      case 4: return '#f43f5e'; // Rose
-      default: return '#10b981';
+      case 0: return '#10B981'; // Green
+      case 1: return '#06B6D4'; // Cyan
+      case 2: return '#D97706'; // Amber
+      case 3: return '#EA580C'; // Orange
+      case 4: return '#E11D48'; // Rose
+      default: return '#10B981';
     }
   };
 
   const currentColor = getStageColor(stage);
 
   return (
-    <div className="glass-card" style={{ textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+    <div className="neo-card" style={{ textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <h3 style={{ fontSize: '1.05rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-          BEHAVIORAL WELLBEING INDEX
+        <h3 style={{ fontSize: '1.05rem', color: 'var(--text-muted)', fontWeight: 700 }}>
+          BEHAVIORAL RISK
         </h3>
         <span className={`badge badge-stage-${stage}`}>
           {stageLabel}
         </span>
       </div>
 
-      {/* Radial Gauge */}
-      <div style={{ position: 'relative', width: '220px', height: '180px', margin: '0 auto' }}>
-        <svg height="200" width="220" style={{ transform: 'rotate(135deg)', overflow: 'visible' }}>
+      {/* Neomorphic Circular Raised Container */}
+      <div style={{
+        position: 'relative',
+        width: '210px',
+        height: '210px',
+        margin: '10px auto',
+        borderRadius: '50%',
+        background: 'var(--bg-neo)',
+        boxShadow: 'var(--neo-raised)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        {/* Sunken Inner Ring */}
+        <div style={{
+          position: 'absolute',
+          width: '180px',
+          height: '180px',
+          borderRadius: '50%',
+          boxShadow: 'var(--neo-inset)'
+        }} />
+
+        <svg height="210" width="210" style={{ transform: 'rotate(135deg)', position: 'absolute' }}>
           {/* Track background */}
           <circle
-            stroke="rgba(255, 255, 255, 0.08)"
+            stroke="#C4C1DA"
             fill="transparent"
             strokeDasharray={`${arcLength} ${circumference}`}
             strokeWidth={strokeWidth}
             strokeLinecap="round"
             r={normalizedRadius}
-            cx="110"
-            cy="110"
+            cx="105"
+            cy="105"
           />
           {/* Active progress */}
           <circle
@@ -58,24 +78,21 @@ export default function WellnessGauge({ riskScore = 15, stage = 0, stageLabel = 
             strokeWidth={strokeWidth}
             strokeLinecap="round"
             r={normalizedRadius}
-            cx="110"
-            cy="110"
+            cx="105"
+            cy="105"
           />
         </svg>
 
         {/* Center Score Text */}
-        <div style={{
-          position: 'absolute',
-          top: '42%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          textAlign: 'center'
-        }}>
-          <div style={{ fontSize: '3rem', fontFamily: 'var(--font-heading)', fontWeight: 800, color: '#ffffff', lineHeight: 1 }}>
+        <div style={{ zIndex: 2, textAlign: 'center' }}>
+          <div style={{ fontSize: '3.2rem', fontFamily: 'var(--font-heading)', fontWeight: 800, color: 'var(--text-main)', lineHeight: 1 }}>
             {Math.round(riskScore)}
           </div>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Deviation Score
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 700, marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Risk Index
+          </div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--accent-violet)', fontWeight: 600, marginTop: '2px' }}>
+            Confidence {Math.round((confidence || 0.87) * 100)}%
           </div>
         </div>
       </div>
@@ -85,14 +102,11 @@ export default function WellnessGauge({ riskScore = 15, stage = 0, stageLabel = 
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
         gap: '12px',
-        marginTop: '16px',
-        paddingTop: '16px',
-        borderTop: '1px solid var(--border-glass)',
-        fontSize: '0.85rem'
+        marginTop: '20px'
       }}>
-        <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '10px', borderRadius: '10px' }}>
-          <div style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>TREND</div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', fontWeight: 600, color: trend === 'increasing' ? '#f43f5e' : '#10b981', marginTop: '4px' }}>
+        <div className="neo-card-inset">
+          <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700 }}>PATTERN TREND</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', fontWeight: 700, color: trend === 'increasing' ? '#E11D48' : '#10B981', marginTop: '4px' }}>
             {trend === 'increasing' && <ArrowUpRight size={16} />}
             {trend === 'decreasing' && <ArrowDownRight size={16} />}
             {trend === 'stable' && <Minus size={16} />}
@@ -100,9 +114,9 @@ export default function WellnessGauge({ riskScore = 15, stage = 0, stageLabel = 
           </div>
         </div>
 
-        <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '10px', borderRadius: '10px' }}>
-          <div style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>PERSISTENCE</div>
-          <div style={{ fontWeight: 600, color: 'var(--text-main)', marginTop: '4px' }}>
+        <div className="neo-card-inset">
+          <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700 }}>PERSISTENCE</div>
+          <div style={{ fontWeight: 700, color: 'var(--text-main)', marginTop: '4px' }}>
             {persistenceDays} {persistenceDays === 1 ? 'Day' : 'Days'}
           </div>
         </div>

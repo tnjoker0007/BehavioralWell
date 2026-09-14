@@ -103,17 +103,19 @@ async def dev_telemetry_dashboard_page():
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-dark: #0D1117;
-            --surface-dark: #161B22;
-            --card-bg: rgba(22, 27, 34, 0.75);
-            --border-color: #30363D;
-            --text-primary: #F0F6FC;
-            --text-secondary: #8B949E;
-            --primary-purple: #A855F7;
-            --primary-teal: #14B8A6;
-            --status-live: #22C55E;
-            --status-stale: #EAB308;
-            --status-disconnected: #EF4444;
+            --bg-neo: #E8E6F4;
+            --shadow-dark: #C4C1DA;
+            --shadow-light: #FFFFFF;
+            --text-main: #2B273D;
+            --text-muted: #6E6A86;
+            --accent-purple: #7C3AED;
+            --accent-teal: #0D9488;
+            --status-live: #10B981;
+            --status-stale: #D97706;
+            --status-disconnected: #E11D48;
+            --neo-raised: 8px 8px 18px var(--shadow-dark), -8px -8px 18px var(--shadow-light);
+            --neo-raised-sm: 5px 5px 12px var(--shadow-dark), -5px -5px 12px var(--shadow-light);
+            --neo-inset: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
         }
 
         * {
@@ -124,10 +126,11 @@ async def dev_telemetry_dashboard_page():
         }
 
         body {
-            background-color: var(--bg-dark);
-            color: var(--text-primary);
+            background-color: var(--bg-neo);
+            color: var(--text-main);
             min-height: 100vh;
             padding: 24px;
+            -webkit-font-smoothing: antialiased;
         }
 
         .header {
@@ -135,38 +138,37 @@ async def dev_telemetry_dashboard_page():
             justify-content: space-between;
             align-items: center;
             padding: 20px 24px;
-            background: var(--surface-dark);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
+            background: var(--bg-neo);
+            border-radius: 20px;
+            box-shadow: var(--neo-raised);
             margin-bottom: 24px;
-            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
         }
 
         .header-title h1 {
             font-size: 1.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #C084FC, #2DD4BF);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+            color: var(--text-main);
         }
 
         .header-title p {
             font-size: 0.85rem;
-            color: var(--text-secondary);
+            color: var(--text-muted);
             margin-top: 4px;
+            font-weight: 500;
         }
 
         .status-badge {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 8px 16px;
+            padding: 8px 18px;
             border-radius: 20px;
             font-size: 0.85rem;
             font-weight: 700;
             letter-spacing: 0.5px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border-color);
+            background: var(--bg-neo);
+            box-shadow: var(--neo-raised-sm);
         }
 
         .status-dot {
@@ -176,71 +178,84 @@ async def dev_telemetry_dashboard_page():
             display: inline-block;
         }
 
-        .status-live { background-color: var(--status-live); box-shadow: 0 0 10px var(--status-live); }
-        .status-stale { background-color: var(--status-stale); box-shadow: 0 0 10px var(--status-stale); }
-        .status-disconnected { background-color: var(--status-disconnected); box-shadow: 0 0 10px var(--status-disconnected); }
+        .status-live { background-color: var(--status-live); box-shadow: 0 0 8px var(--status-live); }
+        .status-stale { background-color: var(--status-stale); box-shadow: 0 0 8px var(--status-stale); }
+        .status-disconnected { background-color: var(--status-disconnected); box-shadow: 0 0 8px var(--status-disconnected); }
 
         .control-bar {
             display: flex;
             gap: 12px;
             margin-bottom: 24px;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .btn {
-            background: var(--surface-dark);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
+            background: var(--bg-neo);
+            color: var(--text-main);
+            box-shadow: var(--neo-raised-sm);
             padding: 10px 20px;
-            border-radius: 10px;
+            border-radius: 12px;
             font-weight: 600;
+            font-size: 0.9rem;
             cursor: pointer;
+            border: none;
             transition: all 0.2s ease;
         }
 
         .btn:hover {
-            border-color: var(--primary-purple);
+            color: var(--accent-purple);
             transform: translateY(-1px);
         }
 
+        .btn:active {
+            box-shadow: var(--neo-inset);
+        }
+
         .btn-primary {
-            background: linear-gradient(135deg, #9333EA, #0D9488);
-            border: none;
+            background: linear-gradient(135deg, #7C3AED 0%, #0D9488 100%);
+            color: #FFFFFF;
+            box-shadow: 5px 5px 15px rgba(124, 58, 237, 0.35), -5px -5px 15px var(--shadow-light);
+        }
+
+        .btn-primary:hover {
+            color: #FFFFFF;
         }
 
         .meta-info {
             font-size: 0.85rem;
-            color: var(--text-secondary);
+            color: var(--text-muted);
+            font-weight: 600;
             margin-left: auto;
         }
 
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 20px;
+            gap: 24px;
         }
 
         .card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 20px;
-            backdrop-filter: blur(16px);
+            background: var(--bg-neo);
+            border-radius: 20px;
+            box-shadow: var(--neo-raised);
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
         }
 
         .card-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            border-bottom: 1px solid rgba(196, 193, 218, 0.4);
             padding-bottom: 12px;
             margin-bottom: 16px;
         }
 
         .card-title {
             font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--primary-purple);
+            font-weight: 800;
+            color: var(--accent-purple);
             display: flex;
             align-items: center;
             gap: 8px;
@@ -250,43 +265,43 @@ async def dev_telemetry_dashboard_page():
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
-        }
-
-        .metric-row:last-child {
-            border-bottom: none;
+            padding: 10px 14px;
+            margin-bottom: 8px;
+            background: var(--bg-neo);
+            border-radius: 12px;
+            box-shadow: var(--neo-inset);
         }
 
         .metric-name {
             font-size: 0.9rem;
-            color: var(--text-secondary);
+            color: var(--text-muted);
+            font-weight: 600;
         }
 
         .metric-value {
             font-size: 1.05rem;
-            font-weight: 700;
-            color: var(--primary-teal);
+            font-weight: 800;
+            color: var(--accent-teal);
         }
 
         .metric-value.waiting {
-            color: var(--text-secondary);
+            color: var(--text-muted);
             font-weight: 500;
             font-style: italic;
         }
 
         .changed-ago {
             font-size: 0.75rem;
-            color: #6E7681;
-            margin-left: 6px;
+            color: var(--text-muted);
+            font-weight: 600;
         }
 
         .graph-container {
             margin-top: 16px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 12px;
+            background: var(--bg-neo);
+            border-radius: 14px;
             padding: 12px;
-            border: 1px solid var(--border-color);
+            box-shadow: var(--neo-inset);
         }
 
         canvas {
@@ -297,10 +312,10 @@ async def dev_telemetry_dashboard_page():
 
         .privacy-note {
             font-size: 0.75rem;
-            color: var(--text-secondary);
-            margin-top: 10px;
+            color: var(--text-muted);
+            margin-top: 12px;
             line-height: 1.4;
-            opacity: 0.8;
+            font-weight: 500;
         }
     </style>
 </head>

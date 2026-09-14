@@ -4,24 +4,16 @@ import { Info, TrendingUp, TrendingDown, AlertCircle } from 'lucide-react';
 export default function ExplainabilityCards({ topContributors = [] }) {
   if (!topContributors || topContributors.length === 0) {
     return (
-      <div className="glass-card">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-          <Info size={20} color="var(--secondary)" />
-          <h3 style={{ fontSize: '1.05rem', color: '#fff', fontWeight: 700 }}>
-            WHAT CHANGED?
+      <div className="neo-card">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
+          <div style={{ padding: '8px', borderRadius: '10px', background: 'var(--bg-neo)', boxShadow: 'var(--neo-raised-sm)', display: 'flex' }}>
+            <Info size={18} color="var(--accent-emerald)" />
+          </div>
+          <h3 style={{ fontSize: '1.05rem', color: 'var(--text-main)', fontWeight: 700 }}>
+            EXPLAINABILITY & PATTERNS
           </h3>
         </div>
-        <div style={{
-          padding: '16px',
-          borderRadius: '12px',
-          background: 'rgba(16, 185, 129, 0.08)',
-          border: '1px solid rgba(16, 185, 129, 0.2)',
-          fontSize: '0.9rem',
-          color: 'var(--secondary)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px'
-        }}>
+        <div className="neo-card-inset" style={{ color: 'var(--accent-emerald)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.9rem' }}>
           <span>✅ Your recent behavioral modalities remain closely aligned with your personal baseline.</span>
         </div>
       </div>
@@ -29,54 +21,55 @@ export default function ExplainabilityCards({ topContributors = [] }) {
   }
 
   return (
-    <div className="glass-card">
+    <div className="neo-card">
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-        <AlertCircle size={20} color="var(--primary)" />
-        <h3 style={{ fontSize: '1.05rem', color: '#fff', fontWeight: 700 }}>
+        <div style={{ padding: '8px', borderRadius: '10px', background: 'var(--bg-neo)', boxShadow: 'var(--neo-raised-sm)', display: 'flex' }}>
+          <AlertCircle size={18} color="var(--accent-violet)" />
+        </div>
+        <h3 style={{ fontSize: '1.05rem', color: 'var(--text-main)', fontWeight: 700 }}>
           WHAT CHANGED? (EXPLAINABLE ATTRIBUTION)
         </h3>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {topContributors.map((factor, idx) => (
-          <div key={idx} style={{
+          <div key={idx} className="neo-card-inset" style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '12px 16px',
-            borderRadius: '12px',
-            background: 'rgba(255, 255, 255, 0.03)',
-            border: '1px solid var(--border-glass)'
+            padding: '12px 16px'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '8px',
-                background: factor.direction === 'elevated' ? 'rgba(244, 63, 94, 0.15)' : 'rgba(6, 182, 212, 0.15)',
+                width: '36px',
+                height: '36px',
+                borderRadius: '10px',
+                background: 'var(--bg-neo)',
+                boxShadow: 'var(--neo-raised-sm)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: factor.direction === 'elevated' ? '#f43f5e' : '#06b6d4'
+                color: factor.direction === 'elevated' ? 'var(--accent-rose)' : 'var(--accent-cyan)'
               }}>
                 {factor.direction === 'elevated' ? <TrendingUp size={18} /> : <TrendingDown size={18} />}
               </div>
               <div>
-                <div style={{ fontSize: '0.9rem', color: '#ffffff', fontWeight: 600 }}>
+                <div style={{ fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: 700 }}>
                   {factor.human_explanation}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', textTransform: 'capitalize' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>
                   Modality: {factor.modality} • Z-Score: {factor.z_score > 0 ? `+${factor.z_score}` : factor.z_score}
                 </div>
               </div>
             </div>
             <span style={{
               fontSize: '0.75rem',
-              fontWeight: 600,
+              fontWeight: 700,
               padding: '4px 10px',
-              borderRadius: '6px',
-              background: 'rgba(255, 255, 255, 0.06)',
-              color: 'var(--text-muted)'
+              borderRadius: '8px',
+              background: 'var(--bg-neo)',
+              boxShadow: 'var(--neo-raised-sm)',
+              color: factor.direction === 'elevated' ? 'var(--accent-rose)' : 'var(--accent-violet)'
             }}>
               {factor.direction.toUpperCase()}
             </span>

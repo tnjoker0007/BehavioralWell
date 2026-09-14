@@ -105,6 +105,7 @@ export default function App() {
               onInjectPreset={handleInjectPreset}
               onNavigateTab={setActiveTab}
               onOpenSelfCheck={() => setIsSelfCheckOpen(true)}
+              currentUser={userProfile}
             />
           </div>
         )}

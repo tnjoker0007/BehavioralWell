@@ -3,30 +3,31 @@ import { Activity, ShieldCheck, UserCheck, BarChart3, HeartHandshake, User, Smar
 
 export default function Navbar({ activeTab, setActiveTab, onOpenSelfCheck, currentUser, onOpenLogin }) {
   const tabs = [
-    { id: 'dashboard', label: 'User Dashboard', icon: Activity },
-    { id: 'telemetry', label: 'Live Phone Telemetry', icon: Smartphone },
+    { id: 'dashboard', label: 'Dashboard', icon: Activity },
+    { id: 'telemetry', label: 'Live Telemetry', icon: Smartphone },
     { id: 'interventions', label: 'Interventions', icon: HeartHandshake },
-    { id: 'consultant', label: currentUser?.role === 'admin' ? '🛡️ Admin Control Center' : 'Consultant Dashboard', icon: UserCheck },
-    { id: 'privacy', label: 'Privacy & Consent', icon: ShieldCheck },
+    { id: 'consultant', label: currentUser?.role === 'admin' ? '🛡️ Admin Center' : 'Consultant', icon: UserCheck },
+    { id: 'privacy', label: 'Privacy', icon: ShieldCheck },
     { id: 'account', label: 'Account', icon: User },
-    { id: 'analytics', label: 'Research Analytics', icon: BarChart3 },
+    { id: 'analytics', label: 'Research', icon: BarChart3 },
   ];
 
   const isAdmin = currentUser?.role === 'admin';
 
   return (
     <header style={{
-      borderBottom: '1px solid var(--border-glass)',
-      background: 'rgba(9, 13, 22, 0.85)',
-      backdropFilter: 'blur(20px)',
+      background: 'var(--bg-neo)',
+      boxShadow: 'var(--neo-raised-sm)',
       position: 'sticky',
       top: 0,
-      zIndex: 100
+      zIndex: 100,
+      padding: '12px 0',
+      borderBottom: '1px solid rgba(255, 255, 255, 0.5)'
     }}>
       <div style={{
         maxWidth: '1400px',
         margin: '0 auto',
-        padding: '16px 24px',
+        padding: '0 24px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -36,41 +37,39 @@ export default function Navbar({ activeTab, setActiveTab, onOpenSelfCheck, curre
         {/* Brand Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '12px',
-            background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
+            width: '42px',
+            height: '42px',
+            borderRadius: '14px',
+            background: 'var(--bg-neo)',
+            boxShadow: 'var(--neo-raised-sm)',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 0 20px rgba(6, 182, 212, 0.4)'
+            justifyContent: 'center'
           }}>
-            <Activity size={24} color="#ffffff" />
+            <Activity size={24} color="var(--accent-violet)" />
           </div>
           <div>
-            <div style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '1.25rem', color: '#fff' }}>
-              Behavioral<span style={{ color: 'var(--primary)' }}>Well</span>
+            <div style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '1.35rem', color: 'var(--text-main)' }}>
+              Behavioral<span style={{ color: 'var(--accent-violet)' }}>Well</span>
             </div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', letterSpacing: '0.04em' }}>
-              PERSONAL BEHAVIORAL FINGERPRINT ENGINE
+            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.04em' }}>
+              NEOMORPHIC HEALTHCARE ENGINE
             </div>
           </div>
         </div>
 
         {/* View Tabs */}
-        <nav style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px' }}>
+        <nav style={{ display: 'flex', gap: '8px', overflowX: 'auto', padding: '4px' }}>
           {tabs.map(tab => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
-            const isTabAdmin = tab.id === 'consultant' && isAdmin;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`nav-tab ${isActive ? 'active' : ''}`}
-                style={isTabAdmin ? { border: '1px solid rgba(168, 85, 247, 0.5)', background: isActive ? 'var(--primary)' : 'rgba(168, 85, 247, 0.15)', color: '#d8b4fe' } : {}}
               >
-                <Icon size={18} />
+                <Icon size={18} color={isActive ? 'var(--accent-violet)' : 'var(--text-muted)'} />
                 <span>{tab.label}</span>
               </button>
             );
@@ -87,32 +86,29 @@ export default function Navbar({ activeTab, setActiveTab, onOpenSelfCheck, curre
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              padding: '6px 14px',
-              borderRadius: '10px',
-              background: isAdmin ? 'rgba(168, 85, 247, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-              border: isAdmin ? '1px solid #a855f7' : '1px solid var(--border-glass)',
-              color: '#fff',
+              padding: '8px 14px',
+              borderRadius: '12px',
               fontSize: '0.85rem'
             }}
           >
-            {isAdmin ? <Shield size={16} color="#c084fc" /> : <User size={16} color="#60a5fa" />}
-            <span>{currentUser?.name || 'Guest User'}</span>
+            {isAdmin ? <Shield size={16} color="var(--accent-violet)" /> : <User size={16} color="var(--accent-blue)" />}
+            <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{currentUser?.name || 'Guest User'}</span>
             <span style={{
               fontSize: '0.7rem',
               fontWeight: 800,
-              padding: '2px 6px',
-              borderRadius: '4px',
-              background: isAdmin ? '#a855f7' : 'var(--primary)',
-              color: '#fff',
+              padding: '3px 8px',
+              borderRadius: '8px',
+              background: isAdmin ? 'var(--accent-violet)' : 'var(--accent-teal)',
+              color: '#FFFFFF',
               marginLeft: '4px'
             }}>
               {isAdmin ? 'ADMIN' : 'USER'}
             </span>
-            <LogIn size={14} color="var(--text-dim)" />
+            <LogIn size={14} color="var(--text-muted)" />
           </button>
 
           <button className="btn btn-secondary" onClick={onOpenSelfCheck} style={{ fontSize: '0.85rem' }}>
-            <HeartHandshake size={16} color="var(--primary)" />
+            <HeartHandshake size={16} color="var(--accent-rose)" />
             Self Check-in
           </button>
         </div>
