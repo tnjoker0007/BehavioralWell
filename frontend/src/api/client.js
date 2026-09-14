@@ -34,6 +34,9 @@ export const api = {
   completeIntervention: (sessionId, resultData) => fetchJson(`/interventions/sessions/${sessionId}/complete`, { method: 'POST', body: JSON.stringify(resultData) }),
   deleteUserData: (userId = DEMO_USER_ID) => fetchJson(`/auth/users/${userId}/data`, { method: 'DELETE' }),
   getConsultantPatients: () => fetchJson('/consultant/patients'),
+  getUserActivityDetails: (userId) => fetchJson(`/consultant/user-activity/${userId}`),
   getResearchAnalytics: () => fetchJson('/analytics/overview'),
+  login: (email, password) => fetchJson('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
+  register: (userData) => fetchJson('/auth/register', { method: 'POST', body: JSON.stringify(userData) }),
 };
 

@@ -58,10 +58,26 @@ for prefix in [settings.API_V1_STR, "/api"]:
 
 @app.on_event("startup")
 def seed_demo_data():
-    """Seeds a default demo user and baseline telemetry on server start."""
+    """Seeds default admin, user accounts, and initial telemetry profiles on server start."""
     db = SessionLocal()
     try:
         from app.models.domain import User
+        # 1. Admin Account
+        admin_user = db.query(User).filter(User.email == "admin@behavioralwell.ai").first()
+        if not admin_user:
+            AuthService.create_user(
+                db,
+                UserCreate(
+                    name="Dr. Sarah Chen (Admin)",
+                    email="admin@behavioralwell.ai",
+                    password="AdminPassword123!",
+                    role="admin",
+                    age_group="35-44",
+                    occupation_category="Clinical Psychiatry"
+                )
+            )
+
+        # 2. Main Demo User
         demo_user = db.query(User).filter(User.email == "demo@behavioralwell.ai").first()
         if not demo_user:
             demo_user = AuthService.create_user(
@@ -70,14 +86,69 @@ def seed_demo_data():
                     name="Alex Morgan",
                     email="demo@behavioralwell.ai",
                     password="Password123!",
+                    role="user",
                     age_group="25-34",
                     occupation_category="Software Engineer"
                 )
             )
-            # Seed 14 days of baseline "normal" telemetry
             normal_telemetry = SimulationService.get_preset_telemetry("normal")
             for _ in range(14):
                 ingest_single_telemetry(normal_telemetry, demo_user.id, db)
+
+        # 3. Sample Patient: Sam Rivera (High Stress / Sleep Disruption)
+        sam_user = db.query(User).filter(User.email == "sam.rivera@behavioralwell.ai").first()
+        if not sam_user:
+            sam_user = AuthService.create_user(
+                db,
+                UserCreate(
+                    name="Sam Rivera",
+                    email="sam.rivera@behavioralwell.ai",
+                    password="Password123!",
+                    role="user",
+                    age_group="25-34",
+                    occupation_category="Software Engineer"
+                )
+            )
+            sleep_telemetry = SimulationService.get_preset_telemetry("sleep_disruption")
+            for _ in range(10):
+                ingest_single_telemetry(sleep_telemetry, sam_user.id, db)
+
+        # 4. Sample Patient: Jordan Lee (Acute Stress / Cognitive Overload)
+        jordan_user = db.query(User).filter(User.email == "jordan.lee@behavioralwell.ai").first()
+        if not jordan_user:
+            jordan_user = AuthService.create_user(
+                db,
+                UserCreate(
+                    name="Jordan Lee",
+                    email="jordan.lee@behavioralwell.ai",
+                    password="Password123!",
+                    role="user",
+                    age_group="35-44",
+                    occupation_category="Financial Analyst"
+                )
+            )
+            stress_telemetry = SimulationService.get_preset_telemetry("acute_stress")
+            for _ in range(7):
+                ingest_single_telemetry(stress_telemetry, jordan_user.id, db)
+
+        # 5. Sample Patient: Taylor Swift (Recovery Pattern)
+        taylor_user = db.query(User).filter(User.email == "taylor.swift@behavioralwell.ai").first()
+        if not taylor_user:
+            taylor_user = AuthService.create_user(
+                db,
+                UserCreate(
+                    name="Taylor Swift",
+                    email="taylor.swift@behavioralwell.ai",
+                    password="Password123!",
+                    role="user",
+                    age_group="25-34",
+                    occupation_category="Creative Design"
+                )
+            )
+            recovery_telemetry = SimulationService.get_preset_telemetry("recovery")
+            for _ in range(12):
+                ingest_single_telemetry(recovery_telemetry, taylor_user.id, db)
+
     except Exception as e:
         print(f"Seed info: {e}")
     finally:

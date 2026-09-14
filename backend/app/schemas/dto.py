@@ -7,6 +7,7 @@ class UserCreate(BaseModel):
     name: str
     email: EmailStr
     password: str
+    role: Optional[str] = "user"
     age_group: Optional[str] = "25-34"
     occupation_category: Optional[str] = "Technology"
 
@@ -21,6 +22,7 @@ class UserResponse(BaseModel):
     id: str
     name: str
     email: str
+    role: str = "user"
     age_group: str
     timezone: str
     occupation_category: str

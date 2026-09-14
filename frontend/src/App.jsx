@@ -9,6 +9,7 @@ import ConsultantDashboardView from './views/ConsultantDashboardView';
 import ResearchAnalyticsView from './views/ResearchAnalyticsView';
 import AndroidSyncSimulator from './components/AndroidSyncSimulator';
 import SelfCheckModal from './components/SelfCheckModal';
+import LoginModal from './components/LoginModal';
 import { api, DEMO_USER_ID } from './api/client';
 
 export default function App() {
@@ -18,6 +19,7 @@ export default function App() {
   const [baselineData, setBaselineData] = useState(null);
   const [consentData, setConsentData] = useState(null);
   const [isSelfCheckOpen, setIsSelfCheckOpen] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // Initial Data Fetch
@@ -42,10 +44,18 @@ export default function App() {
     setLoading(false);
   };
 
-
   useEffect(() => {
     loadUserData();
   }, []);
+
+  const handleLoginSuccess = (user) => {
+    setUserProfile(user);
+    if (user.role === 'admin') {
+      setActiveTab('consultant');
+    } else {
+      setActiveTab('dashboard');
+    }
+  };
 
   const handleInjectPreset = async (presetName) => {
     const updatedRisk = await api.injectSimulatorPreset(DEMO_USER_ID, presetName);
@@ -81,6 +91,8 @@ export default function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onOpenSelfCheck={() => setIsSelfCheckOpen(true)}
+        currentUser={userProfile}
+        onOpenLogin={() => setIsLoginOpen(true)}
       />
 
       <main style={{ maxWidth: '1400px', width: '100%', margin: '0 auto', padding: '24px' }}>
@@ -135,6 +147,12 @@ export default function App() {
         isOpen={isSelfCheckOpen}
         onClose={() => setIsSelfCheckOpen(false)}
         onSubmit={handleSelfCheckSubmit}
+      />
+
+      <LoginModal
+        isOpen={isLoginOpen}
+        onClose={() => setIsLoginOpen(false)}
+        onLoginSuccess={handleLoginSuccess}
       />
     </div>
   );

@@ -10,6 +10,7 @@ class User(Base):
     name = Column(String, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
+    role = Column(String, default="user") # "user" or "admin"
     age_group = Column(String, default="25-34")
     timezone = Column(String, default="UTC")
     occupation_category = Column(String, default="Technology")

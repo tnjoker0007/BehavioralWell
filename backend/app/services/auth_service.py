@@ -42,6 +42,7 @@ class AuthService:
             name=user_in.name,
             email=user_in.email,
             hashed_password=hash_password(user_in.password),
+            role=user_in.role or "user",
             age_group=user_in.age_group or "25-34",
             occupation_category=user_in.occupation_category or "Technology"
         )
