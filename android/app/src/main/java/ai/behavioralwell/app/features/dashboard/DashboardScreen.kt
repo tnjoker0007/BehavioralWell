@@ -3,7 +3,6 @@ package ai.behavioralwell.app.features.dashboard
 import androidx.compose.animation.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -49,27 +49,26 @@ fun DashboardScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier
-                                .size(38.dp)
-                                .clip(CircleShape)
-                                .background(NeoBg)
-                                .border(1.dp, Color(0x66FFFFFF), CircleShape),
+                                .size(40.dp)
+                                .shadow(4.dp, CircleShape, ambientColor = NeoShadowDark, spotColor = NeoShadowLight)
+                                .background(NeoBg, CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Psychology,
                                 contentDescription = null,
                                 tint = PrimaryCyan,
-                                modifier = Modifier.size(22.dp)
+                                modifier = Modifier.size(24.dp)
                             )
                         }
-                        Spacer(modifier = Modifier.width(10.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(
                                 text = "BehavioralWell",
                                 style = MaterialTheme.typography.titleMedium.copy(
                                     color = TextPrimaryDark,
                                     fontWeight = FontWeight.ExtraBold,
-                                    fontSize = 18.sp
+                                    fontSize = 19.sp
                                 )
                             )
                             Text(
@@ -102,13 +101,22 @@ fun DashboardScreen(
         },
         floatingActionButton = {
             if (selectedTab == NavigationTab.HOME) {
-                ExtendedFloatingActionButton(
+                FloatingActionButton(
                     onClick = onOpenSelfCheckIn,
-                    containerColor = PrimaryCyan,
-                    contentColor = Color.White,
-                    icon = { Icon(Icons.Default.Mood, contentDescription = null, tint = Color.White) },
-                    text = { Text("Self Check-in", fontWeight = FontWeight.Bold) }
-                )
+                    containerColor = NeoBg,
+                    contentColor = PrimaryCyan,
+                    shape = CircleShape,
+                    modifier = Modifier.shadow(8.dp, CircleShape, ambientColor = NeoShadowDark, spotColor = NeoShadowLight)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Mood, contentDescription = null, tint = PrimaryCyan)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Self Check-in", fontWeight = FontWeight.ExtraBold, color = PrimaryCyan)
+                    }
+                }
             }
         },
         containerColor = NeoBg
@@ -198,7 +206,7 @@ fun DashboardHomeContent(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
         item { Spacer(modifier = Modifier.height(4.dp)) }
 
@@ -210,7 +218,7 @@ fun DashboardHomeContent(
                     style = MaterialTheme.typography.titleLarge.copy(
                         color = TextPrimaryDark,
                         fontWeight = FontWeight.ExtraBold,
-                        fontSize = 22.sp
+                        fontSize = 24.sp
                     )
                 )
                 Text(
@@ -220,7 +228,7 @@ fun DashboardHomeContent(
             }
         }
 
-        // Hero Risk Gauge Card
+        // Hero Risk Gauge Card (Borderless Molded Neomorphism)
         item {
             BehavioralWellGlassCard {
                 Text(
@@ -230,7 +238,7 @@ fun DashboardHomeContent(
                         fontWeight = FontWeight.ExtraBold,
                         letterSpacing = 0.5.sp
                     ),
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    modifier = Modifier.padding(bottom = 12.dp)
                 )
 
                 RefinedCircularRiskGauge(
@@ -240,7 +248,7 @@ fun DashboardHomeContent(
                     confidence = risk.confidence
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
                     text = supportiveText,
@@ -283,8 +291,7 @@ fun DashboardHomeContent(
                         modifier = Modifier
                             .clip(CircleShape)
                             .background(Stage0Stable.copy(alpha = 0.15f))
-                            .border(1.dp, Stage0Stable.copy(alpha = 0.4f), CircleShape)
-                            .padding(horizontal = 10.dp, vertical = 3.dp)
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
                     ) {
                         Text(
                             text = risk.trend.uppercase(),
@@ -336,10 +343,10 @@ fun DashboardHomeContent(
         }
 
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     ModalityTile(
                         title = "Keyboard",
@@ -354,7 +361,7 @@ fun DashboardHomeContent(
                 }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     ModalityTile(
                         title = "Motion",
@@ -382,9 +389,8 @@ fun DashboardHomeContent(
                         Box(
                             modifier = Modifier
                                 .size(44.dp)
-                                .clip(CircleShape)
-                                .background(NeoBg)
-                                .border(1.dp, Color(0x66FFFFFF), CircleShape),
+                                .shadow(4.dp, CircleShape, ambientColor = NeoShadowDark, spotColor = NeoShadowLight)
+                                .background(NeoBg, CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(Icons.Default.SelfImprovement, contentDescription = null, tint = PrimaryCyan)
@@ -425,14 +431,14 @@ fun ModalityTile(
         Column {
             Text(
                 text = title,
-                style = MaterialTheme.typography.labelMedium.copy(color = TextSecondaryDark, fontWeight = FontWeight.Bold)
+                style = MaterialTheme.typography.labelMedium.copy(color = TextSecondaryDark, fontWeight = FontWeight.ExtraBold)
             )
             Text(
                 text = "${score.toInt()}%",
                 style = MaterialTheme.typography.titleLarge.copy(
                     color = if (score > 25.0) Stage2PersistentDev else TextPrimaryDark,
                     fontWeight = FontWeight.ExtraBold,
-                    fontSize = 20.sp
+                    fontSize = 22.sp
                 ),
                 modifier = Modifier.padding(top = 4.dp)
             )
