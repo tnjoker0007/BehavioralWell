@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import UserDashboardView from './views/UserDashboardView';
+import LiveTelemetryView from './views/LiveTelemetryView';
 import InterventionsView from './views/InterventionsView';
 import PrivacyConsentView from './views/PrivacyConsentView';
 import AccountView from './views/AccountView';
@@ -94,6 +95,10 @@ export default function App() {
               onOpenSelfCheck={() => setIsSelfCheckOpen(true)}
             />
           </div>
+        )}
+
+        {activeTab === 'telemetry' && (
+          <LiveTelemetryView />
         )}
 
         {activeTab === 'interventions' && (

@@ -1,9 +1,10 @@
 import React from 'react';
-import { Activity, ShieldCheck, UserCheck, BarChart3, HeartHandshake, User } from 'lucide-react';
+import { Activity, ShieldCheck, UserCheck, BarChart3, HeartHandshake, User, Smartphone } from 'lucide-react';
 
 export default function Navbar({ activeTab, setActiveTab, onOpenSelfCheck }) {
   const tabs = [
     { id: 'dashboard', label: 'User Dashboard', icon: Activity },
+    { id: 'telemetry', label: 'Live Phone Telemetry', icon: Smartphone },
     { id: 'interventions', label: 'Interventions', icon: HeartHandshake },
     { id: 'privacy', label: 'Privacy & Consent', icon: ShieldCheck },
     { id: 'account', label: 'Account', icon: User },

@@ -320,6 +320,9 @@ async def dev_telemetry_dashboard_page():
         <button id="btnStart" class="btn btn-primary" onclick="startMonitor()">START LIVE MONITOR</button>
         <button id="btnStop" class="btn" onclick="stopMonitor()">STOP LIVE MONITOR</button>
         <button class="btn" onclick="clearDisplay()">CLEAR DISPLAY</button>
+        <a href="http://localhost:3000" target="_blank" class="btn" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: rgba(59, 130, 246, 0.2); border-color: #3b82f6; color: #60a5fa;">
+            🌐 MAIN WEBSITE PORTAL (PORT 3000) ↗
+        </a>
         <div class="meta-info">
             Stream Last Update: <span id="lastStreamUpdate">Never</span> | Phone Telemetry: <span id="lastPhoneTime">N/A</span>
         </div>
