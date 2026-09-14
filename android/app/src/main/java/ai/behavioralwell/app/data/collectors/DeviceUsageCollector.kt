@@ -193,7 +193,7 @@ class DeviceUsageCollector(
             }
         }
 
-        // 2. Reconcile screen time with system UsageStats for exact Digital Wellbeing alignment
+        // 2. Diagnostic logging for system UsageStats vs event-derived calculation
         try {
             val statsList = usageStatsManager.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, startTime, endTime)
             if (!statsList.isNullOrEmpty()) {
@@ -203,15 +203,17 @@ class DeviceUsageCollector(
                         statsSumMs += stats.totalTimeInForeground
                     }
                 }
-                if (statsSumMs > 0L) {
-                    totalForegroundMs = statsSumMs
-                }
+                Log.d("DeviceUsageCollector", "Screen time comparison: Event-derived=${totalForegroundMs}ms, System queryUsageStats=${statsSumMs}ms")
             }
         } catch (e: Exception) {
             Log.w("DeviceUsageCollector", "Failed to query system UsageStats", e)
         }
 
-        val screenTimeHours = totalForegroundMs / (1000.0f * 60.0f * 60.0f)
+        // Clip total foreground time to physically possible elapsed time since midnight today
+        val maxPossibleTodayMs = (endTime - startTime).coerceAtLeast(0L)
+        val boundedForegroundMs = totalForegroundMs.coerceAtMost(maxPossibleTodayMs)
+
+        val screenTimeHours = boundedForegroundMs / (1000.0f * 60.0f * 60.0f)
         val nightUsageHours = nightForegroundMs / (1000.0f * 60.0f * 60.0f)
         val switchFrequency = if (screenTimeHours > 0) appSwitchCount / screenTimeHours else 0.0f
 
