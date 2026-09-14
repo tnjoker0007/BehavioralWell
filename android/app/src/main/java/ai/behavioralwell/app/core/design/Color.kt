@@ -2,30 +2,37 @@ package ai.behavioralwell.app.core.design
 
 import androidx.compose.ui.graphics.Color
 
-// Primary Theme Colors (Aligned with Web UI)
-val DarkBg = Color(0xFF090D16)
-val GlassSurface = Color(0xB2111827)        // rgba(17, 24, 39, 0.7)
-val GlassSurfaceHover = Color(0xCC1E293B)   // rgba(30, 41, 59, 0.8)
-val BorderGlass = Color(0x1AFFFFFF)          // rgba(255, 255, 255, 0.1)
-val BorderGlassGlow = Color(0x4D06B6D4)      // rgba(6, 182, 212, 0.3)
+// Neomorphic Primary Color System
+val NeoBg = Color(0xFFE8E6F4)
+val NeoSurface = Color(0xFFE8E6F4)
+val NeoShadowDark = Color(0xFFC4C1DA)
+val NeoShadowLight = Color(0xFFFFFFFF)
+
+// Legacy alias compatibility
+val DarkBg = NeoBg
+val GlassSurface = NeoSurface
+val GlassSurfaceHover = Color(0xFFDFDCF0)
+val BorderGlass = Color(0x33C4C1DA)
+val BorderGlassGlow = Color(0x4D7C3AED)
 
 // Accents & Gradients
-val PrimaryCyan = Color(0xFF06B6D4)
-val PrimaryCyanGlow = Color(0x4006B6D4)
-val AccentPurple = Color(0xFF8B5CF6)
-val AccentBlue = Color(0xFF3B82F6)
+val PrimaryCyan = Color(0xFF7C3AED)          // Deep Violet
+val PrimaryCyanGlow = Color(0x407C3AED)
+val AccentPurple = Color(0xFF9333EA)
+val AccentBlue = Color(0xFF2563EB)
+val AccentTeal = Color(0xFF0D9488)
 
 // Stage Risk Accent Colors
 val Stage0Stable = Color(0xFF10B981)          // Emerald Green
-val Stage1EarlyDev = Color(0xFF06B6D4)        // Cyan
-val Stage2PersistentDev = Color(0xFFF59E0B)   // Amber
-val Stage3ElevatedRisk = Color(0xFFF97316)    // Orange
-val Stage4HighConcern = Color(0xFFF43F5E)     // Crimson Rose
+val Stage1EarlyDev = Color(0xFF0284C7)        // Sky Blue
+val Stage2PersistentDev = Color(0xFFD97706)   // Amber
+val Stage3ElevatedRisk = Color(0xFFEA580C)    // Orange
+val Stage4HighConcern = Color(0xFFE11D48)     // Crimson Rose
 
-// Neutral & Text Colors
-val TextPrimaryDark = Color(0xFFF8FAFC)
-val TextSecondaryDark = Color(0xFF94A3B8)
-val TextDimDark = Color(0xFF64748B)
+// High Contrast Text Colors
+val TextPrimaryDark = Color(0xFF2B273D)       // Deep Slate
+val TextSecondaryDark = Color(0xFF6E6A86)     // Muted Slate
+val TextDimDark = Color(0xFF8E8A9F)
 
 // Modern Design Tokens & Aliases
 val TextPrimary = TextPrimaryDark
@@ -37,13 +44,12 @@ val Stage2Color = Stage2PersistentDev
 val Stage3Color = Stage3ElevatedRisk
 val Stage4Color = Stage4HighConcern
 
-// Legacy aliases for backward compatibility
+// Legacy aliases
 val PrimaryTeal = PrimaryCyan
-val PrimaryTealDark = Color(0xFF0F766E)
+val PrimaryTealDark = Color(0xFF5B21B6)
 val PrimaryTealLight = PrimaryCyan
-val PrimaryTealContainer = Color(0xFF115E59)
-val DarkSlateBackground = DarkBg
-val SurfaceSlate = GlassSurface
+val PrimaryTealContainer = Color(0xFFEDE9FE)
+val DarkSlateBackground = NeoBg
+val SurfaceSlate = NeoSurface
 val SurfaceSlateLight = GlassSurfaceHover
 val BorderSlate = BorderGlass
-

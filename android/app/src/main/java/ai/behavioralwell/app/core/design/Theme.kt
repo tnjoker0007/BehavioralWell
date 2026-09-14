@@ -2,19 +2,19 @@ package ai.behavioralwell.app.core.design
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 
-private val DarkColorScheme = darkColorScheme(
+private val NeomorphicColorScheme = lightColorScheme(
     primary = PrimaryCyan,
-    onPrimary = DarkBg,
+    onPrimary = NeoBg,
     primaryContainer = PrimaryCyanGlow,
     onPrimaryContainer = TextPrimaryDark,
     secondary = AccentPurple,
     onSecondary = TextPrimaryDark,
-    background = DarkBg,
+    background = NeoBg,
     onBackground = TextPrimaryDark,
-    surface = GlassSurface,
+    surface = NeoSurface,
     onSurface = TextPrimaryDark,
     surfaceVariant = GlassSurfaceHover,
     onSurfaceVariant = TextSecondaryDark,
@@ -27,7 +27,7 @@ fun BehavioralWellTheme(
     content: @Composable () -> Unit
 ) {
     MaterialTheme(
-        colorScheme = DarkColorScheme,
+        colorScheme = NeomorphicColorScheme,
         typography = Typography,
         content = content
     )

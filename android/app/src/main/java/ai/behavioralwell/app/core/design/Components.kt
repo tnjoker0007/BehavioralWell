@@ -30,16 +30,21 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun BehavioralWellGlassCard(
     modifier: Modifier = Modifier,
-    cornerRadius: Dp = 16.dp,
-    borderColor: Color = BorderGlass,
-    backgroundColor: Color = GlassSurface,
+    cornerRadius: Dp = 20.dp,
+    borderColor: Color = Color(0x66FFFFFF),
+    backgroundColor: Color = NeoBg,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .border(1.dp, borderColor, RoundedCornerShape(cornerRadius))
-            .shadow(12.dp, RoundedCornerShape(cornerRadius), ambientColor = Color.Black, spotColor = PrimaryCyanGlow),
+            .shadow(
+                elevation = 6.dp,
+                shape = RoundedCornerShape(cornerRadius),
+                ambientColor = NeoShadowDark,
+                spotColor = NeoShadowLight
+            )
+            .border(1.dp, borderColor, RoundedCornerShape(cornerRadius)),
         shape = RoundedCornerShape(cornerRadius),
         color = backgroundColor
     ) {
@@ -47,6 +52,28 @@ fun BehavioralWellGlassCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(20.dp),
+            content = content
+        )
+    }
+}
+
+@Composable
+fun NeomorphicInsetContainer(
+    modifier: Modifier = Modifier,
+    cornerRadius: Dp = 14.dp,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .border(1.dp, Color(0x33C4C1DA), RoundedCornerShape(cornerRadius)),
+        shape = RoundedCornerShape(cornerRadius),
+        color = Color(0xFFDFDCF0)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
             content = content
         )
     }
@@ -82,23 +109,26 @@ fun RefinedCircularRiskGauge(
     ) {
         Box(
             modifier = Modifier
-                .size(200.dp)
+                .size(210.dp)
+                .shadow(8.dp, CircleShape, ambientColor = NeoShadowDark, spotColor = NeoShadowLight)
+                .background(NeoBg, CircleShape)
+                .border(1.dp, Color(0x66FFFFFF), CircleShape)
                 .padding(12.dp),
             contentAlignment = Alignment.Center
         ) {
             Canvas(modifier = Modifier.fillMaxSize()) {
                 val strokeWidth = 14.dp.toPx()
 
-                // Track Ring (Dark Background)
+                // Track Ring (Soft Neomorphic Light Gray Track)
                 drawArc(
-                    color = Color(0xFF1E293B),
+                    color = Color(0xFFC4C1DA),
                     startAngle = 140f,
                     sweepAngle = 260f,
                     useCenter = false,
                     style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
                 )
 
-                // Active Score Ring
+                // Active Score Arc
                 drawArc(
                     color = stageColor,
                     startAngle = 140f,
@@ -125,7 +155,7 @@ fun RefinedCircularRiskGauge(
                     modifier = Modifier
                         .padding(top = 2.dp)
                         .clip(CircleShape)
-                        .background(stageColor.copy(alpha = 0.2f))
+                        .background(stageColor.copy(alpha = 0.15f))
                         .border(1.dp, stageColor.copy(alpha = 0.4f), CircleShape)
                         .padding(horizontal = 10.dp, vertical = 2.dp)
                 ) {
@@ -144,7 +174,8 @@ fun RefinedCircularRiskGauge(
                     text = "Confidence: ${confidence.toInt()}%",
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = TextSecondaryDark,
-                        fontSize = 11.sp
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium
                     ),
                     modifier = Modifier.padding(top = 6.dp)
                 )
@@ -168,9 +199,9 @@ fun GradientButton(
         modifier = modifier
             .fillMaxWidth()
             .height(52.dp)
-            .shadow(8.dp, RoundedCornerShape(12.dp), spotColor = PrimaryCyanGlow),
+            .shadow(6.dp, RoundedCornerShape(14.dp), ambientColor = NeoShadowDark, spotColor = NeoShadowLight),
         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(14.dp),
         contentPadding = PaddingValues(0.dp)
     ) {
         Box(
@@ -178,9 +209,9 @@ fun GradientButton(
                 .fillMaxSize()
                 .background(
                     brush = Brush.horizontalGradient(
-                        colors = listOf(PrimaryCyan, AccentPurple)
+                        colors = listOf(Color(0xFF7C3AED), Color(0xFF2563EB))
                     ),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(14.dp)
                 ),
             contentAlignment = Alignment.Center
         ) {
@@ -212,7 +243,6 @@ fun GradientButton(
     }
 }
 
-
 @Composable
 fun SectionHeader(
     title: String,
@@ -232,14 +262,14 @@ fun SectionHeader(
                 text = title,
                 style = MaterialTheme.typography.titleMedium.copy(
                     color = TextPrimaryDark,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.ExtraBold,
                     fontSize = 18.sp
                 )
             )
             if (subtitle != null) {
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.bodySmall.copy(color = TextSecondaryDark),
+                    style = MaterialTheme.typography.bodySmall.copy(color = TextSecondaryDark, fontWeight = FontWeight.Medium),
                     modifier = Modifier.padding(top = 2.dp)
                 )
             }
@@ -276,14 +306,15 @@ fun BehavioralWellBottomBar(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, BorderGlass, RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)),
-        color = GlassSurface,
+            .shadow(8.dp, RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp), ambientColor = NeoShadowDark, spotColor = NeoShadowLight)
+            .border(1.dp, Color(0x66FFFFFF), RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)),
+        color = NeoBg,
         shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 6.dp),
+                .padding(horizontal = 8.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -295,8 +326,9 @@ fun BehavioralWellBottomBar(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
                         .clip(RoundedCornerShape(12.dp))
+                        .background(if (selected) Color(0xFFDFDCF0) else Color.Transparent)
                         .clickable { onTabSelected(tab) }
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .padding(horizontal = 14.dp, vertical = 6.dp)
                 ) {
                     Icon(
                         imageVector = tab.icon,
@@ -308,7 +340,7 @@ fun BehavioralWellBottomBar(
                         text = tab.label,
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = color,
-                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                            fontWeight = if (selected) FontWeight.ExtraBold else FontWeight.Medium,
                             fontSize = 10.sp
                         ),
                         modifier = Modifier.padding(top = 2.dp)
@@ -329,6 +361,6 @@ fun SkeletonLoader(
             .fillMaxWidth()
             .height(height)
             .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFF1E293B))
+            .background(Color(0xFFDFDCF0))
     )
 }

@@ -49,9 +49,10 @@ fun DashboardScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier
-                                .size(36.dp)
+                                .size(38.dp)
                                 .clip(CircleShape)
-                                .background(PrimaryCyanGlow),
+                                .background(NeoBg)
+                                .border(1.dp, Color(0x66FFFFFF), CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -67,13 +68,13 @@ fun DashboardScreen(
                                 text = "BehavioralWell",
                                 style = MaterialTheme.typography.titleMedium.copy(
                                     color = TextPrimaryDark,
-                                    fontWeight = FontWeight.Bold,
+                                    fontWeight = FontWeight.ExtraBold,
                                     fontSize = 18.sp
                                 )
                             )
                             Text(
                                 text = "Behavioral Risk & Digital Phenotyping",
-                                style = MaterialTheme.typography.labelSmall.copy(color = TextSecondaryDark)
+                                style = MaterialTheme.typography.labelSmall.copy(color = TextSecondaryDark, fontWeight = FontWeight.Medium)
                             )
                         }
                     }
@@ -83,7 +84,7 @@ fun DashboardScreen(
                         Icon(Icons.Default.Sensors, contentDescription = "Sensors", tint = PrimaryCyan)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = NeoBg)
             )
         },
         bottomBar = {
@@ -104,13 +105,13 @@ fun DashboardScreen(
                 ExtendedFloatingActionButton(
                     onClick = onOpenSelfCheckIn,
                     containerColor = PrimaryCyan,
-                    contentColor = DarkBg,
-                    icon = { Icon(Icons.Default.Mood, contentDescription = null) },
+                    contentColor = Color.White,
+                    icon = { Icon(Icons.Default.Mood, contentDescription = null, tint = Color.White) },
                     text = { Text("Self Check-in", fontWeight = FontWeight.Bold) }
                 )
             }
         },
-        containerColor = DarkBg
+        containerColor = NeoBg
     ) { padding ->
         Box(
             modifier = Modifier
@@ -145,7 +146,8 @@ fun DashboardScreen(
                                 Text(
                                     text = state.message,
                                     color = Stage4HighConcern,
-                                    style = MaterialTheme.typography.bodyLarge
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Bold
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
                                 GradientButton(
@@ -207,13 +209,13 @@ fun DashboardHomeContent(
                     text = "Good morning",
                     style = MaterialTheme.typography.titleLarge.copy(
                         color = TextPrimaryDark,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.ExtraBold,
                         fontSize = 22.sp
                     )
                 )
                 Text(
                     text = "Here's how your behavioral patterns look today.",
-                    style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondaryDark)
+                    style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondaryDark, fontWeight = FontWeight.Medium)
                 )
             }
         }
@@ -225,7 +227,7 @@ fun DashboardHomeContent(
                     text = "BEHAVIORAL RISK ASSESSMENT",
                     style = MaterialTheme.typography.labelSmall.copy(
                         color = PrimaryCyan,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.ExtraBold,
                         letterSpacing = 0.5.sp
                     ),
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -244,7 +246,8 @@ fun DashboardHomeContent(
                     text = supportiveText,
                     style = MaterialTheme.typography.bodyMedium.copy(
                         color = TextPrimaryDark,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.Medium
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -264,7 +267,7 @@ fun DashboardHomeContent(
                             text = "7-DAY PATTERN TREND",
                             style = MaterialTheme.typography.labelSmall.copy(
                                 color = PrimaryCyan,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.ExtraBold,
                                 letterSpacing = 0.5.sp
                             )
                         )
@@ -272,21 +275,22 @@ fun DashboardHomeContent(
                             text = "Weekly Pattern Stability",
                             style = MaterialTheme.typography.titleMedium.copy(
                                 color = TextPrimaryDark,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.ExtraBold
                             )
                         )
                     }
                     Box(
                         modifier = Modifier
                             .clip(CircleShape)
-                            .background(Stage0Stable.copy(alpha = 0.2f))
-                            .padding(horizontal = 8.dp, vertical = 2.dp)
+                            .background(Stage0Stable.copy(alpha = 0.15f))
+                            .border(1.dp, Stage0Stable.copy(alpha = 0.4f), CircleShape)
+                            .padding(horizontal = 10.dp, vertical = 3.dp)
                     ) {
                         Text(
                             text = risk.trend.uppercase(),
                             style = MaterialTheme.typography.labelSmall.copy(
                                 color = Stage0Stable,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.ExtraBold,
                                 fontSize = 10.sp
                             )
                         )
@@ -316,7 +320,7 @@ fun DashboardHomeContent(
                         drawPath(
                             path = path,
                             color = PrimaryCyan,
-                            style = Stroke(width = 2.5.dp.toPx())
+                            style = Stroke(width = 3.dp.toPx())
                         )
                     }
                 }
@@ -379,7 +383,8 @@ fun DashboardHomeContent(
                             modifier = Modifier
                                 .size(44.dp)
                                 .clip(CircleShape)
-                                .background(PrimaryCyanGlow),
+                                .background(NeoBg)
+                                .border(1.dp, Color(0x66FFFFFF), CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(Icons.Default.SelfImprovement, contentDescription = null, tint = PrimaryCyan)
@@ -388,11 +393,11 @@ fun DashboardHomeContent(
                         Column {
                             Text(
                                 text = "Suggested for you",
-                                style = MaterialTheme.typography.labelSmall.copy(color = PrimaryCyan, fontWeight = FontWeight.Bold)
+                                style = MaterialTheme.typography.labelSmall.copy(color = PrimaryCyan, fontWeight = FontWeight.ExtraBold)
                             )
                             Text(
                                 text = "5-minute Breathing Reset",
-                                style = MaterialTheme.typography.titleMedium.copy(color = TextPrimaryDark, fontWeight = FontWeight.Bold)
+                                style = MaterialTheme.typography.titleMedium.copy(color = TextPrimaryDark, fontWeight = FontWeight.ExtraBold)
                             )
                         }
                     }
@@ -414,22 +419,19 @@ fun ModalityTile(
     score: Float,
     modifier: Modifier = Modifier
 ) {
-    Surface(
+    NeomorphicInsetContainer(
         modifier = modifier
-            .border(1.dp, BorderGlass, RoundedCornerShape(12.dp)),
-        shape = RoundedCornerShape(12.dp),
-        color = GlassSurface
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column {
             Text(
                 text = title,
-                style = MaterialTheme.typography.labelMedium.copy(color = TextSecondaryDark)
+                style = MaterialTheme.typography.labelMedium.copy(color = TextSecondaryDark, fontWeight = FontWeight.Bold)
             )
             Text(
                 text = "${score.toInt()}%",
                 style = MaterialTheme.typography.titleLarge.copy(
                     color = if (score > 25.0) Stage2PersistentDev else TextPrimaryDark,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.ExtraBold,
                     fontSize = 20.sp
                 ),
                 modifier = Modifier.padding(top = 4.dp)
