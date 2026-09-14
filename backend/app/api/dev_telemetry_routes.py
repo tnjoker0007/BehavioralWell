@@ -1,7 +1,7 @@
 import asyncio
 import json
 from datetime import datetime
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from fastapi import APIRouter, Request, Response, HTTPException
 from fastapi.responses import HTMLResponse, StreamingResponse
 from app.config import settings
@@ -9,14 +9,17 @@ from app.config import settings
 router = APIRouter()
 page_router = APIRouter()
 
-# In-memory latest snapshot store (DEV ONLY — No DB writes)
+# In-memory snapshot store per device (DEV ONLY — No DB writes)
+_latest_dev_telemetry_by_device: Dict[str, Dict[str, Any]] = {}
+_active_dev_devices: Dict[str, Dict[str, Any]] = {}
 _latest_dev_telemetry: Dict[str, Any] = {}
 _subscribers: List[asyncio.Queue] = []
 _subscribers_lock = asyncio.Lock()
 
 def _check_dev_guard():
-    # Allow dev endpoints in development environment
-    pass@router.post("/dev/telemetry")
+    pass
+
+@router.post("/dev/telemetry")
 async def ingest_dev_telemetry(payload: Dict[str, Any]):
     """DEV-ONLY route to receive real-time derived telemetry snapshots from Android."""
     _check_dev_guard()
@@ -25,6 +28,9 @@ async def ingest_dev_telemetry(payload: Dict[str, Any]):
     timestamp = payload.get("timestamp", datetime.utcnow().isoformat())
     received_at = datetime.utcnow().isoformat()
     snapshot_id = payload.get("snapshotId", f"telemetry-{int(datetime.utcnow().timestamp() * 1000)}")
+    device_id = payload.get("deviceId") or payload.get("device_id") or "dev_device"
+    device_model = payload.get("deviceModel", "Physical Android Device")
+    android_version = payload.get("androidVersion", "Android 14")
     user_id = payload.get("user_id", "dev_user")
     source = payload.get("source", "REAL_DEVICE")
 
@@ -32,6 +38,9 @@ async def ingest_dev_telemetry(payload: Dict[str, Any]):
     payload["timestamp"] = timestamp
     payload["capturedAt"] = timestamp
     payload["receivedAt"] = received_at
+    payload["deviceId"] = device_id
+    payload["deviceModel"] = device_model
+    payload["androidVersion"] = android_version
     payload["source"] = source
     payload["provenance"] = source
     
@@ -40,10 +49,16 @@ async def ingest_dev_telemetry(payload: Dict[str, Any]):
     st = usage_data.get("screenTime")
     uc = usage_data.get("unlockCount")
     
-    # Safe diagnostic logging ONLY — No tokens, passwords, raw sensors, or GPS logged
-    print(f"[BACKEND RECEIVED] snapshotId={snapshot_id} capturedAt={timestamp} receivedAt={received_at} source={source} screenTime={st} unlockCount={uc} modalities={','.join(modalities)}")
+    print(f"[BACKEND RECEIVED] deviceId={device_id} snapshotId={snapshot_id} capturedAt={timestamp} receivedAt={received_at} source={source} screenTime={st} unlockCount={uc} modalities={','.join(modalities)}")
 
     _latest_dev_telemetry = payload
+    _latest_dev_telemetry_by_device[device_id] = payload
+    _active_dev_devices[device_id] = {
+        "deviceId": device_id,
+        "deviceModel": device_model,
+        "androidVersion": android_version,
+        "lastSeenAt": received_at
+    }
 
     # Broadcast snapshot to active SSE subscribers
     async with _subscribers_lock:
@@ -53,16 +68,24 @@ async def ingest_dev_telemetry(payload: Dict[str, Any]):
             except Exception:
                 pass
 
-    return {"status": "received", "snapshotId": snapshot_id, "timestamp": timestamp}
+    return {"status": "received", "snapshotId": snapshot_id, "deviceId": device_id, "timestamp": timestamp}
+
+@router.get("/dev/telemetry/devices")
+async def get_dev_telemetry_devices():
+    """DEV-ONLY route to return list of active dev devices."""
+    _check_dev_guard()
+    return list(_active_dev_devices.values())
 
 @router.get("/dev/telemetry/current")
-async def get_current_dev_telemetry():
+async def get_current_dev_telemetry(deviceId: Optional[str] = None):
     """DEV-ONLY route to return current in-memory telemetry snapshot."""
     _check_dev_guard()
+    if deviceId and deviceId in _latest_dev_telemetry_by_device:
+        return _latest_dev_telemetry_by_device[deviceId]
     return _latest_dev_telemetry
 
 @router.get("/dev/telemetry/stream")
-async def stream_dev_telemetry(request: Request):
+async def stream_dev_telemetry(request: Request, deviceId: Optional[str] = None):
     """DEV-ONLY Server-Sent Events (SSE) stream broadcasting real-time snapshots at ~1Hz."""
     _check_dev_guard()
     queue = asyncio.Queue()
@@ -70,8 +93,9 @@ async def stream_dev_telemetry(request: Request):
     async with _subscribers_lock:
         _subscribers.append(queue)
 
-    # Yield current state immediately if available
-    if _latest_dev_telemetry:
+    if deviceId and deviceId in _latest_dev_telemetry_by_device:
+        queue.put_nowait(_latest_dev_telemetry_by_device[deviceId])
+    elif _latest_dev_telemetry:
         queue.put_nowait(_latest_dev_telemetry)
 
     async def event_generator():
@@ -81,7 +105,8 @@ async def stream_dev_telemetry(request: Request):
                     break
                 try:
                     data = await asyncio.wait_for(queue.get(), timeout=1.0)
-                    yield f"data: {json.dumps(data)}\n\n"
+                    if not deviceId or data.get("deviceId") == deviceId:
+                        yield f"data: {json.dumps(data)}\n\n"
                 except asyncio.TimeoutError:
                     yield f": heartbeat\n\n"
         except asyncio.CancelledError:
@@ -233,12 +258,25 @@ async def dev_telemetry_dashboard_page():
             color: #FFFFFF;
         }
 
+        .device-select {
+            background: var(--bg-neo);
+            color: var(--text-main);
+            box-shadow: var(--neo-inset);
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            border: none;
+            outline: none;
+            cursor: pointer;
+        }
+
         .meta-info {
             font-size: 0.85rem;
             color: var(--text-muted);
             font-weight: 600;
             margin-left: auto;
-        }     }
+        }
 
         .grid {
             display: grid;
@@ -334,7 +372,7 @@ async def dev_telemetry_dashboard_page():
     <div class="header">
         <div class="header-title">
             <h1>BehavioralWell Live Telemetry</h1>
-            <p>Real-Time Android Derived Feature Monitor (DEV ONLY — No DB Writes)</p>
+            <p>Real-Time Multi-Device Telemetry Bridge (USB ADB Reverse Mode)</p>
         </div>
         <div id="statusBadge" class="status-badge">
             <span id="statusDot" class="status-dot status-disconnected"></span>
@@ -346,13 +384,19 @@ async def dev_telemetry_dashboard_page():
         <button id="btnStart" class="btn btn-primary" onclick="startMonitor()">START LIVE MONITOR</button>
         <button id="btnStop" class="btn" onclick="stopMonitor()">STOP LIVE MONITOR</button>
         <button class="btn" onclick="clearDisplay()">CLEAR DISPLAY</button>
+        
+        <select id="deviceSelect" class="device-select" onchange="onDeviceSelectChange()">
+            <option value="">📱 All Connected Devices</option>
+        </select>
+
         <a href="http://localhost:3000" target="_blank" class="btn" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: rgba(59, 130, 246, 0.2); border-color: #3b82f6; color: #60a5fa;">
             🌐 MAIN WEBSITE PORTAL (PORT 3000) ↗
         </a>
         <div class="meta-info">
-            Source: <span id="telemetrySource" style="color: #10B981; font-weight: 800;">REAL DEVICE</span> | 
-            Snapshot ID: <span id="snapshotId" style="font-family: monospace; color: #7C3AED; font-weight: 700;">N/A</span> | 
-            Stream: <span id="lastStreamUpdate">Never</span> | Phone: <span id="lastPhoneTime">N/A</span>
+            Device: <span id="valDeviceId" style="color: #7C3AED; font-weight: 800; font-family: monospace;">N/A</span> | 
+            Model: <span id="valDeviceModel" style="color: #0D9488; font-weight: 800;">N/A</span> | 
+            Snapshot: <span id="snapshotId" style="font-family: monospace; color: #7C3AED; font-weight: 700;">N/A</span> | 
+            Stream: <span id="lastStreamUpdate">Never</span>
         </div>
     </div>
 
@@ -447,7 +491,7 @@ async def dev_telemetry_dashboard_page():
         <!-- MOBILITY -->
         <div class="card">
             <div class="card-header">
-                <span class="card-title">MAP MOBILITY</span>
+                <span class="card-title">🗺️ MOBILITY</span>
                 <span id="mobilityChanged" class="changed-ago">Waiting...</span>
             </div>
             <div class="metric-row">
@@ -470,6 +514,33 @@ async def dev_telemetry_dashboard_page():
 
         const previousValues = {};
         const lastChangedTimestamps = {};
+        let selectedDeviceId = "";
+
+        async function fetchDevicesList() {
+            try {
+                const res = await fetch('/api/dev/telemetry/devices');
+                if (res.ok) {
+                    const devices = await res.json();
+                    const select = document.getElementById('deviceSelect');
+                    const currentVal = select.value;
+                    select.innerHTML = '<option value="">📱 All Connected Devices</option>';
+                    devices.forEach(d => {
+                        const opt = document.createElement('option');
+                        opt.value = d.deviceId;
+                        opt.innerText = `📱 ${d.deviceModel || 'Android'} (${d.deviceId})`;
+                        if (d.deviceId === currentVal) opt.selected = true;
+                        select.appendChild(opt);
+                    });
+                }
+            } catch (e) {
+                console.warn("Could not fetch devices list:", e);
+            }
+        }
+
+        function onDeviceSelectChange() {
+            selectedDeviceId = document.getElementById('deviceSelect').value;
+            startMonitor();
+        }
 
         function startMonitor() {
             if (eventSource) {
@@ -477,7 +548,8 @@ async def dev_telemetry_dashboard_page():
             }
 
             updateConnectionStatus('CONNECTING', 'status-stale');
-            eventSource = new EventSource('/api/dev/telemetry/stream');
+            const streamUrl = selectedDeviceId ? `/api/dev/telemetry/stream?deviceId=${encodeURIComponent(selectedDeviceId)}` : '/api/dev/telemetry/stream';
+            eventSource = new EventSource(streamUrl);
 
             eventSource.onopen = function() {
                 updateConnectionStatus('LIVE', 'status-live');
@@ -526,14 +598,15 @@ async def dev_telemetry_dashboard_page():
         function handleTelemetrySnapshot(data) {
             lastReceivedTimestamp = new Date();
             document.getElementById('lastStreamUpdate').innerText = lastReceivedTimestamp.toLocaleTimeString();
-            if (data.timestamp) {
-                document.getElementById('lastPhoneTime').innerText = data.timestamp.split('T')[1] || data.timestamp;
+
+            if (data.deviceId) {
+                document.getElementById('valDeviceId').innerText = data.deviceId;
+            }
+            if (data.deviceModel) {
+                document.getElementById('valDeviceModel').innerText = data.deviceModel;
             }
             if (data.snapshotId) {
                 document.getElementById('snapshotId').innerText = data.snapshotId;
-            }
-            if (data.source || data.provenance) {
-                document.getElementById('telemetrySource').innerText = data.source || data.provenance;
             }
 
             updateConnectionStatus('LIVE', 'status-live');
@@ -668,8 +741,8 @@ async def dev_telemetry_dashboard_page():
             }
         }
 
-        // Health check interval for STALE status
         setInterval(() => {
+            fetchDevicesList();
             if (eventSource && eventSource.readyState === EventSource.OPEN) {
                 if (lastReceivedTimestamp) {
                     const elapsedSec = (new Date() - lastReceivedTimestamp) / 1000;
@@ -731,6 +804,7 @@ async def dev_telemetry_dashboard_page():
         }
 
         window.addEventListener('DOMContentLoaded', () => {
+            fetchDevicesList();
             startMonitor();
         });
     </script>

@@ -76,6 +76,10 @@ object CollectorRegistry {
         payload["timestamp"] = timestamp
         payload["source"] = "REAL_DEVICE"
         payload["provenance"] = "REAL_DEVICE"
+        payload["deviceId"] = ai.behavioralwell.app.core.device.DeviceIdManager.getDeviceId(context)
+        payload["deviceModel"] = ai.behavioralwell.app.core.device.DeviceIdManager.getDeviceModel()
+        payload["androidVersion"] = ai.behavioralwell.app.core.device.DeviceIdManager.getAndroidVersion()
+        payload["appVersion"] = ai.behavioralwell.app.core.device.DeviceIdManager.getAppVersion()
 
         if (motion != null) payload["motion"] = motion
         if (usage != null) payload["usage"] = usage

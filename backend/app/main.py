@@ -13,7 +13,8 @@ from app.api import (
     simulator_routes,
     baseline_routes,
     dashboard_routes,
-    dev_telemetry_routes
+    dev_telemetry_routes,
+    device_routes
 )
 from app.services.auth_service import AuthService
 from app.schemas.dto import UserCreate
@@ -55,6 +56,7 @@ for prefix in [settings.API_V1_STR, "/api"]:
     app.include_router(baseline_routes.router, prefix=prefix)
     app.include_router(dashboard_routes.router, prefix=prefix)
     app.include_router(dev_telemetry_routes.router, prefix=prefix)
+    app.include_router(device_routes.router, prefix=prefix)
 
 @app.on_event("startup")
 def seed_demo_data():

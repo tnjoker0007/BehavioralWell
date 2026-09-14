@@ -61,7 +61,7 @@ object LiveTelemetryDebugPublisher {
 
                         devHttpClient.newCall(request).execute().use { response ->
                             if (response.isSuccessful) {
-                                Log.d(TAG, "[DEV TELEMETRY DEBUG] Published derived snapshot: timestamp=${snapshotPayload["timestamp"]}")
+                                Log.d(TAG, "[DEV TELEMETRY DEBUG] Published derived snapshot: snapshotId=${snapshotPayload["snapshotId"]} deviceId=${snapshotPayload["deviceId"]}")
                             } else {
                                 Log.e(TAG, "[DEV TELEMETRY DEBUG] Server error response code: ${response.code}")
                             }

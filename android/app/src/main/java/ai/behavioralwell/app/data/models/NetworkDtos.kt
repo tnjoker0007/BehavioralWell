@@ -57,9 +57,18 @@ data class ConsentResponse(
     @SerializedName("updated_at") val updatedAt: String
 )
 
+// --- Device Registration DTO ---
+data class DeviceRegistrationRequest(
+    @SerializedName("deviceId") val deviceId: String,
+    @SerializedName("deviceModel") val deviceModel: String,
+    @SerializedName("androidVersion") val androidVersion: String,
+    @SerializedName("appVersion") val appVersion: String
+)
+
 // --- Telemetry & Batch Ingestion ---
 data class TelemetryInput(
     @SerializedName("idempotency_key") val idempotencyKey: String? = null,
+    @SerializedName("deviceId") val deviceId: String? = null,
     val timestamp: String? = null,
 
     // Keyboard

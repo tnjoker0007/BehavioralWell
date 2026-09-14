@@ -19,6 +19,10 @@ interface BehavioralWellApiService {
     @GET("auth/me")
     suspend fun getCurrentUser(): Response<UserResponse>
 
+    // --- Device Management ---
+    @POST("device/register")
+    suspend fun registerDevice(@Body request: DeviceRegistrationRequest): Response<Map<String, Any>>
+
     // --- Consent Management ---
     @GET("consent")
     suspend fun getConsent(): Response<ConsentResponse>

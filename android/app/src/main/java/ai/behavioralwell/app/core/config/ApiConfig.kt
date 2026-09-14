@@ -17,10 +17,18 @@ object ApiConfig {
 
     var baseUrl: String
         get() {
-            val rawUrl = if (::prefs.isInitialized) {
+            var rawUrl = if (::prefs.isInitialized) {
                 prefs.getString(KEY_BASE_URL, null) ?: BuildConfig.DEFAULT_API_BASE_URL
             } else {
                 BuildConfig.DEFAULT_API_BASE_URL
+            }
+
+            // Auto-migrate emulator 10.0.2.2 URLs on physical hardware to 127.0.0.1:8000/api/
+            if (rawUrl.contains("10.0.2.2")) {
+                rawUrl = "http://127.0.0.1:8000/api/"
+                if (::prefs.isInitialized) {
+                    prefs.edit().putString(KEY_BASE_URL, rawUrl).apply()
+                }
             }
 
             return if (!rawUrl.endsWith("/")) "$rawUrl/" else rawUrl

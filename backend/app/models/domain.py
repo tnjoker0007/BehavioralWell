@@ -44,6 +44,7 @@ class BehavioralTelemetry(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    device_id = Column(String, nullable=True, index=True)
     timestamp = Column(DateTime, default=datetime.utcnow, index=True)
     
     # Derived Metadata Features (Zero raw text/content)
@@ -130,3 +131,16 @@ class SelfReport(Base):
     note = Column(Text, nullable=True)
 
     user = relationship("User", back_populates="self_reports")
+
+class DeviceRegistration(Base):
+    __tablename__ = "device_registrations"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(String, ForeignKey("users.id"), nullable=True)
+    device_id = Column(String, unique=True, index=True, nullable=False)
+    device_model = Column(String, nullable=True)
+    android_version = Column(String, nullable=True)
+    app_version = Column(String, nullable=True)
+    registered_at = Column(DateTime, default=datetime.utcnow)
+    last_seen_at = Column(DateTime, default=datetime.utcnow)
+

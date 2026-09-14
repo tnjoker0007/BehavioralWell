@@ -53,9 +53,30 @@ class ConsentResponse(ConsentUpdate):
     class Config:
         from_attributes = True
 
+# --- Device Schemas ---
+class DeviceRegistrationRequest(BaseModel):
+    deviceId: str
+    deviceModel: Optional[str] = None
+    androidVersion: Optional[str] = None
+    appVersion: Optional[str] = None
+
+class DeviceRegistrationResponse(BaseModel):
+    id: int
+    user_id: Optional[str]
+    device_id: str
+    device_model: Optional[str]
+    android_version: Optional[str]
+    app_version: Optional[str]
+    registered_at: datetime
+    last_seen_at: datetime
+
+    class Config:
+        from_attributes = True
+
 # --- Telemetry & Batch Ingestion ---
 class TelemetryInput(BaseModel):
     idempotency_key: Optional[str] = None
+    deviceId: Optional[str] = None
     timestamp: Optional[datetime] = None
     
     typing_speed: Optional[float] = None
